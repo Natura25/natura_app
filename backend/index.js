@@ -1,0 +1,54 @@
+import express from 'express';
+import pool from './schemas/db.js';
+const app = express();
+
+app.use(express.json());
+
+app.get('/', (req, res) => {
+  res.send('Hello World!');
+});
+
+app.get('/api/usuarios', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM usuarios');
+    res.json(rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.get('/api/usuarios/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await pool.query(
+      'SELECT id, username, cedula, rol FROM usuarios WHERE id = ?',
+      [id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json(rows[0]); // Solo enviamos un objeto, no un array de 1 elemento
+  } catch (error) {
+    console.error('❌ Error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
+
+try {
+  const connection = await pool.getConnection();
+  console.log('connected to the database');
+  connection.release(); // Libera la conexion una vez que se ha utilizado
+} catch (error) {
+  console.error('Error connecting to the database:', error);
+  process.exit(1); // sale del proceso si no se puede conectar a la base de datos
+}
+
+const PORT = process.env.PORT ?? 3000;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server is running on port ${PORT}`);
+});
