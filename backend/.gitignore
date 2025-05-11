@@ -1,1 +1,24 @@
 .env
+node_modules
+
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# dotenv environment variables
+.env
+
+# Directorios de producción/compilados
+dist/
+build/
+
+# Editor config
+.vscode/
+.idea/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
