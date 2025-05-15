@@ -1,8 +1,20 @@
 import express from 'express';
-import pool from './schemas/db.js';
+import db from './schemas/db.js';
+import session from 'express-session';
+import authRoutes from './routes/authController.route.js';
 const app = express();
 
 app.use(express.json());
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || 'secreto123',
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+
+app.use('/api/auth', authRoutes);
 
 app.get('/', (req, res) => {
   res.send('Hello World!');
@@ -21,7 +33,7 @@ app.get('/api/usuarios', async (req, res) => {
 app.get('/api/usuarios/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const [rows] = await pool.query(
+    const [rows] = await db.query(
       'SELECT id, username, cedula, rol FROM usuarios WHERE id = ?',
       [id]
     );
@@ -37,10 +49,8 @@ app.get('/api/usuarios/:id', async (req, res) => {
   }
 });
 
-
-
 try {
-  const connection = await pool.getConnection();
+  const connection = await db.getConnection();
   console.log('connected to the database');
   connection.release(); // Libera la conexion una vez que se ha utilizado
 } catch (error) {
