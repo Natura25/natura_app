@@ -6,21 +6,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plan del Sitio de Natura</title>
     <style>
+        /* CSS HEX */
+        :root{
+            --tang-blue: #0B5DCCff;
+            --blue-gray: #679AD0ff;
+            --white: #FFFFFFff;
+            --dutch-white: #F2E2B7ff;
+            --saffron: #ECBC47ff;
+            --emerald: #14C267ff;
+            --onix: #000000;
+
+        }
+
+        /* SCSS Gradient
+$gradient-top: linear-gradient(0deg, #0B5DCCff, #679AD0ff, #FFFFFFff, #F2E2B7ff, #ECBC47ff, #14C267ff);
+$gradient-right: linear-gradient(90deg, #0B5DCCff, #679AD0ff, #FFFFFFff, #F2E2B7ff, #ECBC47ff, #14C267ff);
+$gradient-bottom: linear-gradient(180deg, #0B5DCCff, #679AD0ff, #FFFFFFff, #F2E2B7ff, #ECBC47ff, #14C267ff);
+$gradient-left: linear-gradient(270deg, #0B5DCCff, #679AD0ff, #FFFFFFff, #F2E2B7ff, #ECBC47ff, #14C267ff);
+$gradient-top-right: linear-gradient(45deg, #0B5DCCff, #679AD0ff, #FFFFFFff, #F2E2B7ff, #ECBC47ff, #14C267ff);
+$gradient-bottom-right: linear-gradient(135deg, #0B5DCCff, #679AD0ff, #FFFFFFff, #F2E2B7ff, #ECBC47ff, #14C267ff);
+$gradient-top-left: linear-gradient(225deg, #0B5DCCff, #679AD0ff, #FFFFFFff, #F2E2B7ff, #ECBC47ff, #14C267ff);
+$gradient-bottom-left: linear-gradient(315deg, #0B5DCCff, #679AD0ff, #FFFFFFff, #F2E2B7ff, #ECBC47ff, #14C267ff);
+$gradient-radial: radial-gradient(#0B5DCCff, #679AD0ff, #FFFFFFff, #F2E2B7ff, #ECBC47ff, #14C267ff); */
+
         body {
             font-family: Arial, sans-serif;
             line-height: 1.6;
             margin: 0;
             padding: 20px;
-            background-color: #f4f4f4;
+            background: var(--tang-blue);
         }
 
         .container {
             max-width: 800px;
+            box-shadow: 1px 1px 5px 55px var(--emerald);
+        background-color: var(--white);
             margin: auto;
-            background: #fff;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); */
         }
 
         h1,
@@ -31,7 +55,7 @@
         section {
             margin-bottom: 20px;
             padding-bottom: 20px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 2px solid var(--saffron);
         }
 
         ul {
