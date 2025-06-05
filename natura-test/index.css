@@ -1,0 +1,37 @@
+.loading-ani{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 40px;
+    height: 40px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+}
+
+.loading-ani img{
+    width: 40px;
+    height: auto;
+    animation: loading 0.2s infinite linear;
+    filter: hue-rotate(360deg);
+}
+
+
+@keyframes loading {
+    0%{
+    }
+    25%{
+        transform: rotate(-90deg);
+    }
+    50%{
+        transform: rotate(-180deg);
+        filter: hue-rotate(190deg);        
+    }
+    75%{
+        transform: rotate(-270deg);
+    }
+    100%{
+        transform: rotate(-360deg);
+    }
+    
+}
