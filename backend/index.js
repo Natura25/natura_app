@@ -2,6 +2,8 @@ import express from 'express';
 import db from './schemas/db.js';
 import session from 'express-session';
 import authRoutes from './routes/authController.route.js';
+import ventasRoutes from './routes/ventasController.route.js';
+
 const app = express();
 
 app.use(express.json());
@@ -14,7 +16,8 @@ app.use(
   })
 );
 
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authRoutes); // Rutas de autenticación
+app.use('/api/ventas', ventasRoutes); // Rutas de ventas
 
 app.get('/', (req, res) => {
   res.send('Hello World!');
@@ -22,8 +25,8 @@ app.get('/', (req, res) => {
 
 app.get('/api/usuarios', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM usuarios');
-    res.json(rows[0]);
+    const [rows] = await db.query('SELECT * FROM usuarios');
+    res.json(rows);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -49,6 +52,8 @@ app.get('/api/usuarios/:id', async (req, res) => {
   }
 });
 
+//! Revisa si la base de datos está conectada
+
 try {
   const connection = await db.getConnection();
   console.log('connected to the database');
@@ -57,6 +62,8 @@ try {
   console.error('Error connecting to the database:', error);
   process.exit(1); // sale del proceso si no se puede conectar a la base de datos
 }
+
+//! Puerto del servidor
 
 const PORT = process.env.PORT ?? 3000;
 app.listen(PORT, '0.0.0.0', () => {

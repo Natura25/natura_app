@@ -3,9 +3,9 @@ import bcrypt from 'bcrypt';
 import { createUser } from '../models/userModel.js';
 
 const run = async () => {
-  const username = 'ayrton';
-  const password = '1234'; // contraseña original
-  const cedula = '00123456789';
+  const username = 'Jose';
+  const password = '01020102'; // contraseña original
+  const cedula = '123123123';
   const rol = 'admin';
 
   const hash = await bcrypt.hash(password, 10);
