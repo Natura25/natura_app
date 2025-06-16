@@ -14,7 +14,7 @@ export async function createUser(
   rol = 'admin'
 ) {
   const [result] = await db.execute(
-    'INSERT INTO usuarios (username, password, cedula, rol) VALUES (?, ?, ?, ?)',
+    'INSERT INTO usuarios (username, password, rol) VALUES (?, ?, ?)',
     [username, passwordHash, cedula, rol]
   );
   return result.insertId;

@@ -24,7 +24,6 @@ export async function login(req, res) {
     message: 'Login successful',
     id: user.id,
     username: user.username,
-    cedula: user.cedula,
     rol: user.rol,
   });
 }

@@ -3,10 +3,17 @@ import db from './schemas/db.js';
 import session from 'express-session';
 import authRoutes from './routes/authController.route.js';
 import ventasRoutes from './routes/ventasController.route.js';
+import cors from 'cors';
 
 const app = express();
 
 app.use(express.json());
+app.use(
+  cors({
+    origin: 'http://localhost:5173', // Puerto de Vite
+    credentials: true,
+  })
+);
 
 app.use(
   session({
