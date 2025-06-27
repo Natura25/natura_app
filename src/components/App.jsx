@@ -1,29 +1,45 @@
-import { useState } from 'react'
-import reactLogo from '../assets/react.svg'
-import naturaLogo from '../assets/temporal.png'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from '../context/AuthContext';
+import Login from './Logs';
+import Dashboard from '../pages/Dashboard';
+import ProtectedRoute from './ProtectedRoute';
+import './App.css';
 
-function Home() {
-  const [count, setCount] = useState(0)
+function AppContent() {
+  const { isAuthenticated } = useAuth();
 
   return (
-    <>
-      <div>
-          <img src={reactLogo} className="logo react" alt="React logo" />
-          <img src={naturaLogo} className="logo" alt="Vite logo" />
-      </div>
-      <h1><span className='blue'>React</span> + <span className='green'>Natura</span></h1>
-      
-      {/* <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div> */}
-    </>
-  )
+    <Routes>
+      <Route 
+        path="/Login" 
+        element={
+          isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
+        } 
+      />
+      <Route 
+        path="/dashboard" 
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/" 
+        element={<Navigate to={isAuthenticated ? "/dashboard" : "/Login"} replace />} 
+      />
+    </Routes>
+  );
 }
 
-export default Home
+function App() {
+  return (
+    <Router>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </Router>
+  );
+}
+
+export default App;
