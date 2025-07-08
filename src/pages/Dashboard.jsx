@@ -6,7 +6,7 @@ import './Dashboard.css';
 const Dashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const handleLogout = () => {
     logout();
@@ -14,10 +14,10 @@ const Dashboard = () => {
   };
 
   const menuItems = [
-    { id: 'overview', label: 'Overview', icon: '📊' },
-    { id: 'analytics', label: 'Analytics', icon: '📈' },
-    { id: 'reports', label: 'Reports', icon: '📋' },
-    { id: 'settings', label: 'Settings', icon: '⚙️' },
+    { id: 'overview', label: 'Inicio', icon: '🏠' },
+    { id: 'analytics', label: 'Registros', icon: '📋' },
+    { id: 'reports', label: 'Consultas', icon: '📈' },
+    { id: 'settings', label: 'Reportes', icon: '⚙️' },
   ];
 
   const [activeMenu, setActiveMenu] = useState('overview');
@@ -111,7 +111,7 @@ const Dashboard = () => {
                 <div className="chart-placeholder">
                   <p>Chart visualization would go here</p>
                   <div className="chart-bars">
-                    {[60, 80, 45, 90, 70, 85, 95].map((height, index) => (
+                    {[60, 80, 45, 35, 70, 15, 10].map((height, index) => (
                       <div 
                         key={index} 
                         className="chart-bar" 
