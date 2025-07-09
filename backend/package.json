@@ -11,6 +11,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "start": "node --watch index.js"
+    "start": "node --watch index.js",
+    "build": "echo 'No build step required'"
   }
 }
