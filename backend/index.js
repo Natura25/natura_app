@@ -18,23 +18,26 @@ app.use(express.json());
 
 app.use(
   cors({
-    origin: 'https://localhost:5173', // tu frontend
+    origin: 'http://localhost:5173', // usa http para desarrollo local
     credentials: true,
   })
 );
 
-// ✅ Usar PostgreSQL como store para sesiones
-
+// ✅ Usar PostgreSQL como store para sesiones (esto elimina el warning)
 app.use(
   session({
+    store: new PgSession({
+      pool: db,
+      tableName: 'user_sessions', // nombre de tabla (opcional)
+    }),
     name: 'connect.sid',
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: false, // 🔴 ESTO DEBE SER FALSE para localhost (sin HTTPS)
-      sameSite: 'Lax', // ✅ 'Lax' permite cookies en navegación cruzada con cuidado
+      secure: false, // debe ser true solo en producción con HTTPS
+      sameSite: 'Lax',
       maxAge: 1000 * 60 * 60 * 24, // 1 día
     },
   })
@@ -48,38 +51,9 @@ app.use('/api/cuentas', cuentasRoutes);
 app.use('/api/cuentas-contables', cuentasContablesRoutes);
 app.use('/api/cuentas-pagar', cuentasPorPagarRoutes);
 
+// Endpoint básico
 app.get('/', (req, res) => {
   res.send('Hello World!');
-});
-
-app.get('/api/usuarios', async (req, res) => {
-  try {
-    const result = await db.query(`
-      SELECT id, username, cedula, email, telefono, rol_id, activo, creado_en, actualizado_en 
-      FROM usuarios
-    `);
-    res.json(result.rows);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
-
-app.get('/api/usuarios/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const result = await db.query(
-      'SELECT id, username, cedula, rol FROM usuarios WHERE id = $1',
-      [id]
-    );
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-    res.json(result.rows[0]);
-  } catch (error) {
-    console.error('❌ Error:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
 });
 
 // Puerto
