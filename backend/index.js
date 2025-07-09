@@ -24,20 +24,7 @@ app.use(
 );
 
 // ✅ Usar PostgreSQL como store para sesiones
-app.use(
-  session({
-    name: 'connect.sid',
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      secure: false, // 🔴 ESTO DEBE SER FALSE para localhost (sin HTTPS)
-      sameSite: 'Lax', // ✅ 'Lax' permite cookies en navegación cruzada con cuidado
-      maxAge: 1000 * 60 * 60 * 24, // 1 día
-    },
-  })
-);
+
 app.use(
   session({
     name: 'connect.sid',
