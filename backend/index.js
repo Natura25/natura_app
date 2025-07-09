@@ -34,7 +34,7 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: true, // https obligatorio para que se envíen cookies 'secure'
+      secure: false, // https obligatorio para que se envíen cookies 'secure'
       sameSite: 'none', // permite cookies cross-site
       maxAge: 1000 * 60 * 60 * 24, // 1 día
     },
