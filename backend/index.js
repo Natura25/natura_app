@@ -9,6 +9,7 @@ import ventasRoutes from './routes/ventasController.route.js';
 import cuentasRoutes from './routes/cuentasPorCobrar.route.js';
 import cuentasContablesRoutes from './routes/cuentasContables.route.js';
 import cuentasPorPagarRoutes from './routes/cuentasPorPagar.route.js';
+import dashboardRoutes from './routes/dashboard.route.js';
 
 const app = express();
 const PgSession = pgSession(session);
@@ -40,6 +41,7 @@ app.use(
 );
 
 // Rutas
+app.use('/api', dashboardRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/ventas', ventasRoutes);
 app.use('/api/cuentas', cuentasRoutes);
