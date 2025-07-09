@@ -3,7 +3,7 @@ import { authMiddleware } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-app.get('/api/dashboard', (req, res) => {
+router.get('/api/dashboard', (req, res) => {
   if (!req.session.user) {
     return res.status(401).json({ error: 'No autorizado' });
   }
