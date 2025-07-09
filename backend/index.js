@@ -34,7 +34,8 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false, // pon true si usas HTTPS
+      secure: true, // pon true si usas HTTPS
+      sameSite: 'none', // necesario para cookies con CORS
       maxAge: 1000 * 60 * 60 * 24, // 1 día
     },
   })
