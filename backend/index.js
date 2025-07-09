@@ -28,14 +28,14 @@ app.use(
   session({
     store: new PgSession({
       pool: db,
-      tableName: 'user_session', // opcional: nombre de tabla
+      tableName: 'user_sessions',
     }),
     secret: process.env.SESSION_SECRET || 'secreto123',
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: true, // pon true si usas HTTPS
-      sameSite: 'none', // necesario para cookies con CORS
+      secure: true, // https obligatorio para que se envíen cookies 'secure'
+      sameSite: 'none', // permite cookies cross-site
       maxAge: 1000 * 60 * 60 * 24, // 1 día
     },
   })
