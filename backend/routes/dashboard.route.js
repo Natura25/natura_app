@@ -3,11 +3,10 @@ import { authMiddleware } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-router.get('/api/dashboard', (req, res) => {
-  if (!req.session.user) {
-    return res.status(401).json({ error: 'No autorizado' });
-  }
-  // Aquí tu lógica para dashboard si está autorizado
+router.use(authMiddleware);
+
+router.get('/dashboard', (req, res) => {
+  // En este punto, authMiddleware ya confirmó sesión válida
   res.json({ message: 'Dashboard data', user: req.session.user });
 });
 
