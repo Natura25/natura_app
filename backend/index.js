@@ -18,7 +18,7 @@ app.use(express.json());
 
 app.use(
   cors({
-    origin: 'http://localhost:5173', // usa http para desarrollo local
+    origin: ['http://localhost:5173', 'https://localhost:5173'],
     credentials: true,
   })
 );
