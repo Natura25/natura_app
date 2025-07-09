@@ -1,20 +1,75 @@
+/* estos son stilos que van a ser movidos a un css global*/
+.poppins-light {
+  font-style: normal;
+}
+
+.poppins-regular {
+  font-family: "Poppins", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+
+.required{
+  color: red;
+}
+
+p{
+  font-family: "Poppins", sans-serif;
+  font-weight: 100;
+  font-size: 1rem;
+  color: black;
+}
+
+.copy{
+  position: absolute;
+  bottom: 0px ;
+  text-align: center;
+  font-size: 0.75rem;
+}
+
+/*-------------------------------------------------*/
+
+.reset{
+  margin-top: -5px;
+  align-self: center;
+  font-size: 0.75rem;
+}
+
+.reset a{
+  color: blue;
+}
+
 .login-container {
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding: 20px;
+    background: linear-gradient(135deg,#b9d3e2 0%, #113cff 100%);
+    padding: 10px;
   }
   
-  .login-card {
-    background: white;
+  .login-card-container{
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.363);
     border-radius: 16px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-    padding: 48px;
+    padding: 50px;
+    backdrop-filter: blur(10px);
+  }
+
+  .login-logo{
+    width: 250px;
+    object-fit: cover;
+    margin: 0 50px 0 0;
+  }
+
+  .login-card {
     width: 100%;
     max-width: 400px;
-    backdrop-filter: blur(10px);
   }
   
   .login-header {
@@ -74,7 +129,7 @@
   }
   
   .login-button {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #073ffa;
     color: white;
     border: none;
     padding: 14px 24px;
@@ -87,6 +142,7 @@
   }
   
   .login-button:hover:not(:disabled) {
+    background: #0000ff;
     transform: translateY(-1px);
     box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
   }
@@ -119,13 +175,17 @@
     margin: 0;
   }
   
-  @media (max-width: 480px) {
+  @media (max-width: 690px) {
     .login-card {
       padding: 32px 24px;
       margin: 16px;
     }
     
     .login-header h1 {
-      font-size: 24px;
+      font-size: 2rem;
+    }
+
+    .login-logo{
+      display: none;
     }
   } 
