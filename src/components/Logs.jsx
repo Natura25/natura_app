@@ -59,7 +59,7 @@ const Login = () => {
 
         <div className="login-card">
           <div className="login-header">
-            <h1>Bienvenido a Natura</h1>
+            <h1>Bienvenido a Naturacifra</h1>
             <p>Inicia sesión para acceder</p>
           </div>
 
@@ -100,7 +100,7 @@ const Login = () => {
               {isLoading ? 'Accediendo...' : 'Acceder'}
             </button>
 
-            <p className='reset'>Olvidé mi contraseña, <a href="">recuperar.</a></p>
+            <p className='reset'>Olvidé mi contraseña, <a href="">recuperar</a>.</p>
           </form>
 
           <div className="login-footer">

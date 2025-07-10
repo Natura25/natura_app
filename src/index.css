@@ -1,4 +1,19 @@
 :root {
+  --base-color:#0B5DCC;
+  --secundary-color:#679AD0;
+  --light-color:#FFFFFF;
+  --highlight-color:#F2E2B7;
+  --highlight-color-2:#ECBC47; 
+  --logo-color:#14C267;
+  --small-ft: 0.75rem;
+  --regular-ft: 1rem;
+  --large-ft: 1.5rem;
+  
+
+
+/*-----------------------*/
+
+
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
