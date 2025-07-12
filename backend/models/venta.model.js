@@ -39,20 +39,20 @@ export const Venta = {
 
     const result = await db.query(
       `
-      INSERT INTO ventas (tipo, cliente_id, usuario_id, monto, descripcion, fecha_venta, comprobante_fiscal)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)  RETURNING id
+    INSERT INTO ventas (tipo, cliente_id, monto, usuario_id, descripcion, fecha_venta, comprobante_fiscal)
+    VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id
     `,
       [
         tipo,
         cliente_id,
-        usuario_id,
         monto,
+        usuario_id,
         descripcion,
         fecha_venta,
         comprobante_fiscal,
       ]
     );
 
-    return { id: result.insertId };
+    return result.rows[0];
   },
 };

@@ -1,17 +1,15 @@
-import { Router } from 'express';
-import {
-  getAll,
-  getById,
-  createCuenta,
-} from '../controllers/cuentasPorPagarController.js';
-import { authMiddleware } from '../middlewares/authMiddleware.js';
+import express from 'express';
+import * as controller from '../controllers/cuentasPorPagar.controller.js';
+import { verificarAutenticado } from '../middlewares/authMiddleware.js';
 
-const router = Router();
+const router = express.Router();
 
-router.use(authMiddleware);
+router.use(verificarAutenticado); // Protege todas las rutas
 
-router.get('/', getAll);
-router.get('/:id', getById);
-router.post('/', createCuenta);
+router.post('/', controller.crear);
+router.get('/', controller.listar);
+router.get('/:id', controller.ver);
+router.put('/:id', controller.editar);
+router.delete('/:id', controller.eliminar);
 
 export default router;
