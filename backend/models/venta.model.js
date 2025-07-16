@@ -37,6 +37,9 @@ export const Venta = {
       comprobante_fiscal,
     } = data;
 
+    // Asegurar que fecha_venta tenga un valor
+    const fechaVenta = fecha_venta || new Date().toISOString().split('T')[0];
+
     const result = await db.query(
       `
     INSERT INTO ventas (tipo, cliente_id, monto, usuario_id, descripcion, fecha_venta, comprobante_fiscal)
@@ -48,11 +51,10 @@ export const Venta = {
         monto,
         usuario_id,
         descripcion,
-        fecha_venta,
+        fechaVenta,
         comprobante_fiscal,
       ]
     );
-
     return result.rows[0];
   },
 };
