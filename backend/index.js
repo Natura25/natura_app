@@ -2,7 +2,6 @@ import express from 'express';
 import session from 'express-session';
 import pgSession from 'connect-pg-simple';
 import cors from 'cors';
-
 import db from './schemas/db.js'; // tu pool de PostgreSQL
 import authRoutes from './routes/authController.route.js';
 import ventasRoutes from './routes/ventasController.route.js';

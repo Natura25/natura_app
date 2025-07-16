@@ -3,7 +3,7 @@ import {
   getVentas,
   getVentaById,
   createVenta,
-} from '../controllers/ventasController.js';
+} from '../controllers/VentasController.js';
 import { authMiddleware } from '../middlewares/authMiddleware.js';
 
 const router = Router();
