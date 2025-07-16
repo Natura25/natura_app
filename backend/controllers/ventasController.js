@@ -1,6 +1,6 @@
 import { Venta } from '../models/venta.model.js';
 import db from '../schemas/db.js';
-import { registrarMovimientoContable } from '../services/movimientosService.js';
+import { registrarMovimientoContable } from '../utils/movimientosService.js';
 
 const ID_CUENTA_CXC = 7; // ← ID real de "Cuentas por cobrar"
 const ID_CUENTA_INGRESOS = 13; // ← ID real de "Ingresos por ventas"
