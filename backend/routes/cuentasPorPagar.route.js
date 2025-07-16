@@ -1,5 +1,5 @@
 import express from 'express';
-import * as controller from '../controllers/cuentasPorPagar.controller.js';
+import * as controller from '../controllers/cuentasPorPagarController.js';
 import { verificarAutenticado } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
