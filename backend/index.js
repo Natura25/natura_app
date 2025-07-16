@@ -7,7 +7,7 @@ import authRoutes from './routes/authController.route.js';
 import ventasRoutes from './routes/ventasController.route.js';
 import cuentasRoutes from './routes/cuentasPorCobrar.route.js';
 import cuentasContablesRoutes from './routes/cuentasContables.route.js';
-import cuentasPorPagarRoutes from './controllers/CuentasPorPagar.controller.js';
+import cuentasPorPagarRoutes from './routes/cuentasPorPagar.route.js';
 
 const app = express();
 const PgSession = pgSession(session);
