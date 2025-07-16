@@ -1,5 +1,5 @@
 // backend/services/movimientosService.js
-import db from '../db/db.js'; // importa tu pool de conexión
+import db from '../schemas/db.js';
 
 export async function registrarMovimientoContable({
   cuenta_id,
