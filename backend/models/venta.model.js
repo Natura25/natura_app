@@ -37,8 +37,20 @@ export const Venta = {
       comprobante_fiscal,
     } = data;
 
-    // Asegurar que fecha_venta tenga un valor
-    const fechaVenta = fecha_venta || new Date().toISOString().split('T')[0];
+    // 🔥 FORZAR que fecha_venta nunca sea null
+    const fechaVentaFinal =
+      fecha_venta || new Date().toISOString().split('T')[0];
+
+    console.log('🔍 Datos antes de insertar:', {
+      tipo,
+      cliente_id,
+      usuario_id,
+      monto,
+      descripcion,
+      fecha_venta,
+      fechaVentaFinal,
+      comprobante_fiscal,
+    });
 
     const result = await db.query(
       `
@@ -51,7 +63,7 @@ export const Venta = {
         monto,
         usuario_id,
         descripcion,
-        fechaVenta,
+        fechaVentaFinal, // ← Usar la fecha validada
         comprobante_fiscal,
       ]
     );
