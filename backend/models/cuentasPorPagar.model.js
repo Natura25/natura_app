@@ -1,4 +1,4 @@
-import db from '../db.js';
+import db from '../schemas/db.js';
 
 export async function crearCuentaPorPagar({
   proveedor_id,
