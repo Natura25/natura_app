@@ -1,5 +1,5 @@
 import { Venta } from '../models/venta.model.js';
-import db from '../db/db.js';
+import db from '../schemas/db.js';
 import { registrarMovimientoContable } from '../services/movimientosService.js';
 
 const ID_CUENTA_CXC = 7; // ← ID real de "Cuentas por cobrar"
