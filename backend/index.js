@@ -60,35 +60,35 @@ app.get('/api/auth/check-session', (req, res) => {
   }
 });
 
-app.get('/api/usuarios', async (req, res) => {
-  try {
-    const result = await db.query(`
-      SELECT id, username, cedula, email, telefono, rol_id, activo, creado_en, actualizado_en 
-      FROM usuarios
-    `);
-    res.json(result.rows);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
+// app.get('/api/usuarios', async (req, res) => {
+//   try {
+//     const result = await db.query(`
+//       SELECT id, username, cedula, email, telefono, rol_id, activo, creado_en, actualizado_en
+//       FROM usuarios
+//     `);
+//     res.json(result.rows);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: 'Internal Server Error' });
+//   }
+// });
 
-app.get('/api/usuarios/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const result = await db.query(
-      'SELECT id, username, cedula, rol FROM usuarios WHERE id = $1',
-      [id]
-    );
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-    res.json(result.rows[0]);
-  } catch (error) {
-    console.error('❌ Error:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
+// app.get('/api/usuarios/:id', async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const result = await db.query(
+//       'SELECT id, username, cedula, rol FROM usuarios WHERE id = $1',
+//       [id]
+//     );
+//     if (result.rows.length === 0) {
+//       return res.status(404).json({ error: 'User not found' });
+//     }
+//     res.json(result.rows[0]);
+//   } catch (error) {
+//     console.error('❌ Error:', error);
+//     res.status(500).json({ error: 'Internal Server Error' });
+//   }
+// });
 
 // Puerto
 const PORT = process.env.PORT ?? 3000;
