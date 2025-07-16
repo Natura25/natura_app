@@ -1,10 +1,10 @@
 import express from 'express';
 import * as controller from '../controllers/cuentasPorPagarController.js';
-import { verificarAutenticado } from '../middlewares/authMiddleware.js';
+import { authMiddleware } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-router.use(verificarAutenticado); // Protege todas las rutas
+router.use(authMiddleware); // Protege todas las rutas
 
 router.post('/', controller.crear);
 router.get('/', controller.listar);

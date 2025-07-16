@@ -5,6 +5,7 @@ import { authMiddleware } from '../middlewares/authMiddleware.js';
 const router = express.Router();
 
 router.use(authMiddleware);
+router.use(verificarAdminMiddleware); // Protege todas las rutas de cuentas contables
 
 router.post('/', verificarAdminMiddleware, controller.crear);
 router.get('/', controller.listar);
