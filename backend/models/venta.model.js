@@ -34,7 +34,7 @@ class VentaModel {
         v.id, v.tipo, v.forma_pago, v.monto, v.fecha_venta,
         v.descripcion, v.comprobante_fiscal,
         c.nombre as cliente_nombre,
-        u.nombre as usuario_nombre,
+        u.username as usuario_nombre,
         CASE 
           WHEN v.forma_pago = 'credito' THEN COALESCE(cxc.saldo_pendiente, v.monto)
           ELSE 0 
@@ -84,7 +84,7 @@ class VentaModel {
       SELECT 
         v.*,
         c.nombre as cliente_nombre, c.telefono as cliente_telefono,
-        u.nombre as usuario_nombre,
+        u.username as usuario_nombre,
         CASE 
           WHEN v.forma_pago = 'credito' THEN COALESCE(cxc.saldo_pendiente, v.monto)
           ELSE 0 
