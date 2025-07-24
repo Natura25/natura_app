@@ -1,7 +1,7 @@
 import db from '../schemas/db.js';
 import { registrarMovimientoContable } from '../utils/movimientosService.js';
 
-// ============= CONFIGURACIÓN DE CUENTAS CONTABLES =============
+//! ============= CONFIGURACIÓN DE CUENTAS CONTABLES =============
 const CUENTAS = {
   CAJA: 8, // 1.1 - Caja (para ventas al contado)
   BANCOS: 9, // 1.2 - Bancos (opcional para depósitos)
@@ -15,7 +15,7 @@ const CUENTAS = {
 };
 
 class VentaModel {
-  // ============= MÉTODOS DE CONSULTA =============
+  //! ============= MÉTODOS DE CONSULTA =============
 
   /**
    * Obtener todas las ventas con filtros opcionales
@@ -111,7 +111,7 @@ class VentaModel {
     return result.rows.length > 0;
   }
 
-  // ============= MÉTODOS DE CREACIÓN =============
+  //! ============= MÉTODOS DE CREACIÓN =============
 
   /**
    * Crear una nueva venta con transacción completa
@@ -225,7 +225,7 @@ class VentaModel {
     }
   }
 
-  // ============= MÉTODOS DE ACTUALIZACIÓN =============
+  //! ============= MÉTODOS DE ACTUALIZACIÓN =============
 
   /**
    * Actualizar una venta existente
@@ -283,7 +283,7 @@ class VentaModel {
     return result.rows[0] || null;
   }
 
-  // ============= MÉTODOS DE ELIMINACIÓN =============
+  //! ============= MÉTODOS DE ELIMINACIÓN =============
 
   /**
    * Eliminar una venta y todos sus registros relacionados
@@ -375,7 +375,7 @@ class VentaModel {
     }
   }
 
-  // ============= MÉTODOS DE REPORTES =============
+  //! ============= MÉTODOS DE REPORTES =============
 
   /**
    * Generar reporte de ventas agrupado
@@ -424,7 +424,7 @@ class VentaModel {
     return result.rows;
   }
 
-  // ============= MÉTODOS PRIVADOS DE APOYO =============
+  //! ============= MÉTODOS PRIVADOS DE APOYO =============
 
   /**
    * Insertar items de una venta
@@ -582,7 +582,7 @@ class VentaModel {
     });
   }
 
-  // ============= MÉTODOS DE VALIDACIÓN =============
+  //! ============= MÉTODOS DE VALIDACIÓN =============
 
   /**
    * Validar datos de venta
@@ -611,7 +611,7 @@ class VentaModel {
     return errores;
   }
 
-  // ============= GETTERS PARA CONSTANTES =============
+  //! ============= GETTERS PARA CONSTANTES =============
 
   static get CUENTAS() {
     return CUENTAS;
