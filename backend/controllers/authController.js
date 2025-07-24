@@ -27,10 +27,19 @@ export async function login(req, res) {
 }
 
 export function getSession(req, res) {
+  console.log('🔍 getSession called:', {
+    sessionID: req.sessionID,
+    hasUser: !!req.session?.user,
+    userId: req.session?.user,
+    rol: req.session?.rol,
+  });
+
   if (!req.session.user) {
+    console.log('❌ No session found');
     return res.status(401).json({ authenticated: false });
   }
 
+  console.log('✅ Session found');
   res.json({
     authenticated: true,
     id: req.session.user,

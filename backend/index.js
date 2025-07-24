@@ -86,21 +86,6 @@ app.get('/', (req, res) => {
   res.json({ message: 'Hello World! CORS should work now' });
 });
 
-app.get('/api/auth/check-session', (req, res) => {
-  console.log('🔍 Checking session');
-  if (req.session && req.session.user) {
-    res.json({
-      authenticated: true,
-      user: req.session.user,
-    });
-  } else {
-    res.status(401).json({
-      authenticated: false,
-      message: 'No valid session found',
-    });
-  }
-});
-
 // Puerto
 const PORT = process.env.PORT ?? 3000;
 app.listen(PORT, '0.0.0.0', () => {
