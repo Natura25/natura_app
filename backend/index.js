@@ -12,33 +12,50 @@ import cuentasPorPagarRoutes from './routes/cuentasPorPagar.route.js';
 const app = express();
 const PgSession = pgSession(session);
 
-// Detectar entorno
-const isDevelopment = process.env.NODE_ENV !== 'production';
-
 app.use(express.json());
 
-// ✅ CORS configurado para desarrollo y producción
+// ✅ CORS SÚPER PERMISIVO PARA TESTING
+console.log('🔧 Setting up CORS...');
 app.use(
   cors({
-    origin: isDevelopment
-      ? [
-          'http://localhost:3000',
-          'http://localhost:5173',
-          'http://localhost:5174',
-          'http://127.0.0.1:5173',
-          'https://localhost:5173',
-        ]
-      : [
-          'https://natura-app-frontend.vercel.app', // Cambia por tu URL real cuando despliegues
-          // Agrega aquí la URL donde despliegues tu frontend
-        ],
+    origin: true, // ← Permite CUALQUIER origen (solo para testing)
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'Origin',
+      'X-Requested-With',
+      'Accept',
+    ],
   })
 );
 
-// ✅ Configuración de sesión mejorada
+// ✅ Headers manuales adicionales (por si acaso)
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+  res.header(
+    'Access-Control-Allow-Headers',
+    'Content-Type, Authorization, Origin, X-Requested-With, Accept'
+  );
+
+  console.log('📥 Request:', {
+    method: req.method,
+    path: req.path,
+    origin: req.headers.origin,
+  });
+
+  // Responder inmediatamente a OPTIONS requests
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
+
+// ✅ Configuración de sesión
 app.use(
   session({
     store: new PgSession({
@@ -49,36 +66,13 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: !isDevelopment, // true en producción (HTTPS), false en desarrollo
+      secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 24, // 1 día
-      sameSite: isDevelopment ? 'lax' : 'none', // 'none' para cross-origin en producción
+      maxAge: 1000 * 60 * 60 * 24,
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     },
   })
 );
-
-// ✅ Middleware para debugging en desarrollo
-if (isDevelopment) {
-  app.use((req, res, next) => {
-    console.log(`${req.method} ${req.path}`, {
-      origin: req.headers.origin,
-      sessionID: req.sessionID,
-      hasSession: !!req.session?.user,
-    });
-    next();
-  });
-}
-
-// Middleware para depuración de CORS
-
-app.use((req, res, next) => {
-  console.log('🌐 CORS Debug:', {
-    origin: req.headers.origin,
-    method: req.method,
-    path: req.path,
-  });
-  next();
-});
 
 // Rutas
 app.use('/api/auth', authRoutes);
@@ -88,17 +82,12 @@ app.use('/api/cuentas-contables', cuentasContablesRoutes);
 app.use('/api/cuentas-pagar', cuentasPorPagarRoutes);
 
 app.get('/', (req, res) => {
-  res.send('Hello World!');
+  console.log('🏠 Home route hit');
+  res.json({ message: 'Hello World! CORS should work now' });
 });
 
-// ✅ Endpoint mejorado para check-session
 app.get('/api/auth/check-session', (req, res) => {
-  console.log('🔍 Checking session:', {
-    sessionID: req.sessionID,
-    hasUser: !!req.session?.user,
-    cookies: req.headers.cookie,
-  });
-
+  console.log('🔍 Checking session');
   if (req.session && req.session.user) {
     res.json({
       authenticated: true,
@@ -116,8 +105,5 @@ app.get('/api/auth/check-session', (req, res) => {
 const PORT = process.env.PORT ?? 3000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🟢 Server is running on port ${PORT}`);
-  console.log(
-    `🔧 Environment: ${isDevelopment ? 'Development' : 'Production'}`
-  );
-  console.log(`🍪 Cookies secure: ${!isDevelopment}`);
+  console.log(`🔧 NODE_ENV: ${process.env.NODE_ENV}`);
 });
