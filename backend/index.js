@@ -69,6 +69,17 @@ if (isDevelopment) {
   });
 }
 
+// Middleware para depuración de CORS
+
+app.use((req, res, next) => {
+  console.log('🌐 CORS Debug:', {
+    origin: req.headers.origin,
+    method: req.method,
+    path: req.path,
+  });
+  next();
+});
+
 // Rutas
 app.use('/api/auth', authRoutes);
 app.use('/api/ventas', ventasRoutes);
