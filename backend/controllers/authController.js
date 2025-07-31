@@ -1,5 +1,10 @@
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import { findUserByUsername, findUserById } from '../models/userModel.js';
+
+// Secret para JWT (usa variable de entorno en producción)
+const JWT_SECRET = process.env.JWT_SECRET || 'tu-secreto-jwt-super-secreto';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 
 export async function login(req, res) {
   const { username, password } = req.body;
@@ -16,33 +21,28 @@ export async function login(req, res) {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
 
-    // Guardar información completa en la sesión
-    req.session.user = {
+    // Crear payload para el JWT
+    const payload = {
       id: user.id,
       username: user.username,
       rol: user.rol,
       email: user.email,
     };
 
-    // Log para debugging
-    console.log('✅ Login exitoso - Sesión guardada:', {
-      sessionID: req.sessionID,
-      user: req.session.user,
-    });
+    // Generar JWT token
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 
-    // Forzar que la sesión se guarde antes de responder
-    req.session.save((err) => {
-      if (err) {
-        console.error('❌ Error guardando sesión:', err);
-        return res.status(500).json({ error: 'Error saving session' });
-      }
+    console.log('✅ Login exitoso - JWT generado para:', user.username);
 
-      res.json({
-        message: 'Login successful',
+    res.json({
+      message: 'Login successful',
+      token: token,
+      user: {
         id: user.id,
         username: user.username,
         rol: user.rol,
-      });
+        email: user.email,
+      },
     });
   } catch (error) {
     console.error('❌ Error en login:', error);
@@ -51,57 +51,88 @@ export async function login(req, res) {
 }
 
 export async function getSession(req, res) {
-  console.log('🔍 getSession called:', {
-    sessionID: req.sessionID,
-    hasUser: !!req.session?.user,
-    userSession: req.session?.user,
-  });
-
-  if (!req.session?.user) {
-    console.log('❌ No session found');
-    return res.status(401).json({ authenticated: false });
-  }
-
   try {
-    // Si solo guardaste el ID, busca los datos completos
-    let userData = req.session.user;
+    // Obtener token del header Authorization
+    const authHeader = req.headers.authorization;
 
-    if (typeof userData === 'number') {
-      // Si solo guardaste el ID, busca el usuario completo
-      const user = await findUserById(userData);
-      if (!user) {
-        console.log('❌ User not found in database');
-        return res.status(401).json({ authenticated: false });
-      }
-      userData = {
-        id: user.id,
-        username: user.username,
-        rol: user.rol,
-      };
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('❌ No token provided');
+      return res
+        .status(401)
+        .json({ authenticated: false, error: 'No token provided' });
     }
 
-    console.log('✅ Session found:', userData);
+    const token = authHeader.substring(7); // Remover "Bearer "
+
+    // Verificar el token
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    console.log('✅ Token válido para usuario:', decoded.username);
+
+    // Opcional: Verificar si el usuario aún existe y está activo
+    const user = await findUserById(decoded.id);
+    if (!user || !user.activo) {
+      console.log('❌ Usuario no encontrado o inactivo');
+      return res
+        .status(401)
+        .json({ authenticated: false, error: 'User not found or inactive' });
+    }
+
     res.json({
       authenticated: true,
-      user: userData, // Envía el objeto user completo
-      ...userData, // También incluye los campos directamente
+      user: {
+        id: decoded.id,
+        username: decoded.username,
+        rol: decoded.rol,
+        email: decoded.email,
+      },
     });
   } catch (error) {
-    console.error('❌ Error en getSession:', error);
+    if (error.name === 'JsonWebTokenError') {
+      console.log('❌ Token inválido:', error.message);
+      return res
+        .status(401)
+        .json({ authenticated: false, error: 'Invalid token' });
+    }
+
+    if (error.name === 'TokenExpiredError') {
+      console.log('❌ Token expirado');
+      return res
+        .status(401)
+        .json({ authenticated: false, error: 'Token expired' });
+    }
+
+    console.error('❌ Error verificando token:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 }
 
 export function logout(req, res) {
-  console.log('🚪 Logout called for session:', req.sessionID);
+  // Con JWT no necesitas hacer nada en el servidor
+  // El cliente simplemente elimina el token
+  console.log('🚪 Logout called - client should remove token');
 
-  req.session.destroy((err) => {
+  res.json({
+    message: 'Logout successful',
+    instruction: 'Remove token from client storage',
+  });
+}
+
+// Middleware para proteger rutas (opcional, para usar en otras rutas)
+export function authenticateToken(req, res, next) {
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: 'Access token required' });
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) {
-      console.error('❌ Error destroying session:', err);
-      return res.status(500).json({ error: 'Error logging out' });
+      return res.status(403).json({ error: 'Invalid or expired token' });
     }
 
-    res.clearCookie('connect.sid'); // Limpia la cookie de sesión
-    res.json({ message: 'Logout successful' });
+    req.user = user;
+    next();
   });
 }
