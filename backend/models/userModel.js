@@ -15,6 +15,26 @@ export async function findUserByUsername(username) {
   return rows[0];
 }
 
+// Buscar usuario por ID - FUNCIÓN NUEVA NECESARIA
+export async function findUserById(id) {
+  try {
+    const { rows } = await db.query(
+      `
+      SELECT u.id, u.username, u.cedula, u.email, u.telefono, r.nombre as rol, u.activo
+      FROM usuarios u
+      JOIN roles r ON u.rol_id = r.id
+      WHERE u.id = $1
+    `,
+      [id]
+    );
+
+    return rows[0] || null;
+  } catch (error) {
+    console.error('Error finding user by ID:', error);
+    throw error;
+  }
+}
+
 // Crear usuario
 export async function createUser(
   username,
