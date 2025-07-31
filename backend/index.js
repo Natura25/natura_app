@@ -18,16 +18,15 @@ app.use(express.json());
 console.log('🔧 Setting up CORS...');
 app.use(
   cors({
-    origin: true, // ← Permite CUALQUIER origen (solo para testing)
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: [
-      'Content-Type',
-      'Authorization',
-      'Origin',
-      'X-Requested-With',
-      'Accept',
+    origin: [
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'https://localhost:5173', // por si usas HTTPS local
     ],
+    credentials: true, // ← CRÍTICO
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+    exposedHeaders: ['Set-Cookie'],
   })
 );
 
@@ -61,16 +60,18 @@ app.use(
     store: new PgSession({
       pool: db,
       tableName: 'user_sessions',
-      createTableIfMissing: true, // ← Importante
+      createTableIfMissing: true,
     }),
     secret: process.env.SESSION_SECRET || 'secreto123',
     resave: false,
     saveUninitialized: false,
+    name: 'sessionId', // Nombre explícito
     cookie: {
-      secure: process.env.NODE_ENV === 'production',
+      secure: true, // ← true porque Render usa HTTPS
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 24,
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      sameSite: 'none', // ← CRÍTICO para cross-origin
+      domain: undefined, // ← No especificar domain para cross-origin
     },
   })
 );
