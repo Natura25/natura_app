@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -10,24 +11,42 @@ const Dashboard = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/home');
   };
 
   const menuItems = [
-    { id: 'overview', label: 'Inicio', icon: '🏠' },
-    { id: 'analytics', label: 'Registros', icon: '📋' },
-    { id: 'reports', label: 'Consultas', icon: '📈' },
-    { id: 'settings', label: 'Reportes', icon: '⚙️' },
+    { id: 'perfil', label: 'Perfil', icon: '👤' },
+    { id: 'configuracion', label: 'Configuración', icon: '⚙️' },
+    { id: 'something1', label: 'Something', icon: '📋' },
+    { id: 'something2', label: 'Something', icon: '📊' },
   ];
 
-  const [activeMenu, setActiveMenu] = useState('overview');
+  const [activeMenu, setActiveMenu] = useState('dashboard');
+
+  // Business modules grid
+  const businessModules = [
+    { id: 'clientes', label: 'Clientes', icon: '👥', color: '#3B82F6' },
+    { id: 'suplidores', label: 'Suplidores', icon: '🚚', color: '#10B981' },
+    // { id: 'empleados', label: 'Empleados', icon: '../assets/dash-logos/employee.webp', color: '#F59E0B' },
+    { id: 'activos', label: 'Activos', icon: '💎', color: '#8B5CF6' },
+    { id: 'inventario', label: 'Inventario', icon: '🏢', color: '#EF4444' },
+    { id: 'costos', label: 'Costos', icon: '💰', color: '#06B6D4' },
+    { id: 'conciliaciones', label: 'Conciliaciones', icon: '🏛️', color: '#84CC16' },
+    { id: 'impuestos', label: 'Impuestos', icon: '📜', color: '#F97316' },
+    { id: 'reportes', label: 'Reportes financieros', icon: '📊', color: '#EC4899' },
+  ];
+
+  const handleModuleClick = (moduleId) => {
+    console.log(`Clicked on module: ${moduleId}`);
+    // Add navigation logic here
+  };
 
   return (
     <div className="dashboard">
       {/* Sidebar */}
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
-          <h2>Natura Finance</h2>
+          <h2>NaturaCifra</h2>
           <button 
             className="sidebar-toggle"
             onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -52,15 +71,24 @@ const Dashboard = () => {
         <div className="sidebar-footer">
           <div className="user-info">
             <div className="user-avatar">
-              {user?.name?.charAt(0).toUpperCase() || 'U'}
+              {user?.profileImage ? (
+                <img 
+                  src={user.profileImage} 
+                  alt={user?.name || 'User'} 
+                  className="user-profile-image"
+                />
+              ) : (
+                <div className="user-avatar-placeholder">
+                  {user?.name?.charAt(0).toUpperCase() || 'U'}
+                </div>
+              )}
             </div>
             <div className="user-details">
-              <p className="user-name">{user?.name || 'User'}</p>
-              <p className="user-email">{user?.email}</p>
+              <p className="user-name">{user?.name || 'Username'}</p>
             </div>
           </div>
           <button className="logout-button" onClick={handleLogout}>
-            Logout
+            Cerrar sesión
           </button>
         </div>
       </aside>
@@ -74,77 +102,82 @@ const Dashboard = () => {
           >
             ☰
           </button>
-          <h1>{menuItems.find(item => item.id === activeMenu)?.label}</h1>
-          <div className="header-actions">
+          <h1>NaturaCifra / Dashboard</h1>
+          {/* <div className="header-actions">
             <button className="notification-btn">🔔</button>
-          </div>
+          </div> */}
         </header>
 
         <div className="content-area">
-          {activeMenu === 'overview' && (
-            <div className="dashboard-content">
-              <div className="stats-grid">
-                <div className="stat-card">
-                  <h3>Total Revenue</h3>
-                  <p className="stat-value">$124,563</p>
-                  <span className="stat-change positive">+12.5%</span>
-                </div>
-                <div className="stat-card">
-                  <h3>Active Users</h3>
-                  <p className="stat-value">1,234</p>
-                  <span className="stat-change positive">+8.2%</span>
-                </div>
-                <div className="stat-card">
-                  <h3>Transactions</h3>
-                  <p className="stat-value">5,678</p>
-                  <span className="stat-change negative">-2.1%</span>
-                </div>
-                <div className="stat-card">
-                  <h3>Growth Rate</h3>
-                  <p className="stat-value">23.4%</p>
-                  <span className="stat-change positive">+15.7%</span>
+          <div className="dashboard-content">
+            {/* Business Modules Grid */}
+            <div className="modules-grid">
+              {businessModules.map((module) => (
+                <button
+                  key={module.id}
+                  className="module-card"
+                  onClick={() => handleModuleClick(module.id)}
+                  style={{ '--module-color': module.color }}
+                >
+                  <div className="module-icon">
+                    <img src={module.icon} alt={module.icon} />
+                  </div>
+                  <span className="module-label">{module.label}</span>
+                </button>
+              ))}
+            </div>
+            
+            {/* Data Visualizations */}
+            <div className="charts-section">
+              <div className="chart-container">
+                <h3>Indicador 1</h3>
+                <div className="chart">
+                  <div className="chart-bars">
+                    <div className="chart-bar" style={{ height: '60%' }}></div>
+                    <div className="chart-bar" style={{ height: '80%' }}></div>
+                    <div className="chart-bar" style={{ height: '45%' }}></div>
+                  </div>
+                  <div className="chart-line">
+                    <svg width="100%" height="100%" viewBox="0 0 200 100">
+                      <path
+                        d="M20 80 Q50 60 80 40 Q110 20 140 30 Q170 40 180 20"
+                        stroke="#8B5CF6"
+                        strokeWidth="2"
+                        fill="none"
+                      />
+                      <circle cx="80" cy="40" r="3" fill="#8B5CF6" />
+                      <circle cx="140" cy="30" r="3" fill="#8B5CF6" />
+                    </svg>
+                  </div>
                 </div>
               </div>
               
-              <div className="chart-section">
-                <h2>Revenue Overview</h2>
-                <div className="chart-placeholder">
-                  <p>Chart visualization would go here</p>
+              <div className="chart-container">
+                <h3>Indicador 2</h3>
+                <div className="chart">
                   <div className="chart-bars">
-                    {[60, 80, 45, 35, 70, 15, 10].map((height, index) => (
-                      <div 
-                        key={index} 
-                        className="chart-bar" 
-                        style={{ height: `${height}%` }}
-                      ></div>
-                    ))}
+                    <div className="chart-bar" style={{ height: '60%' }}></div>
+                    <div className="chart-bar" style={{ height: '80%' }}></div>
+                    <div className="chart-bar" style={{ height: '45%' }}></div>
+                  </div>
+                  <div className="chart-line">
+                    <svg width="100%" height="100%" viewBox="0 0 200 100">
+                      <path
+                        d="M20 80 Q50 60 80 40 Q110 20 140 30 Q170 40 180 20"
+                        stroke="#8B5CF6"
+                        strokeWidth="2"
+                        fill="none"
+                      />
+                      <circle cx="80" cy="40" r="3" fill="#000000" />
+                      <circle cx="140" cy="30" r="3" fill="#555CF6" />
+                    </svg>
                   </div>
                 </div>
               </div>
             </div>
-          )}
-
-          {activeMenu === 'analytics' && (
-            <div className="dashboard-content">
-              <h2>Analytics Dashboard</h2>
-              <p>Detailed analytics and insights will be displayed here.</p>
-            </div>
-          )}
-
-          {activeMenu === 'reports' && (
-            <div className="dashboard-content">
-              <h2>Reports</h2>
-              <p>Generate and view various reports here.</p>
-            </div>
-          )}
-
-          {activeMenu === 'settings' && (
-            <div className="dashboard-content">
-              <h2>Settings</h2>
-              <p>Configure your account and application settings.</p>
-            </div>
-          )}
+          </div>
         </div>
+        
       </main>
     </div>
   );

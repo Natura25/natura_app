@@ -55,7 +55,7 @@ const Login = () => {
     <div className="login-container">
       <div className='login-card-container'>
 
-        <img src="./public/images/natura-icon.png" alt="Natura Icon" className="login-logo" width="250" />
+        <img src="/images/natura-icon.png" alt="Natura Icon" className="login-logo" width="250" />
 
         <div className="login-card">
           <div className="login-header">
