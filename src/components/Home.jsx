@@ -1,13 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import './home.css';
+import './universal.css';
 
 const Home = () => {
     const navigate = useNavigate();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     return (
-        <div className="home">
+        <div className="home" id="inicio">
             {/* Header */}
             <header className="header">
                 <div className="header-container">
@@ -40,9 +41,9 @@ const Home = () => {
                 <div className="hero-background-square"></div>
                 <div className="hero-container">
                     {/* <div className="hero-text-content"> */}
-                        <h1>¿Estas buscando lo mejor en ERP?</h1>
-                        <p>Impulsa la administración, el desarrollo, y el rendimiento de tu negocio o simplemente a los que le sirve con NaturaCifra.</p>
-                        <button className="demo-btn">Probar demo <span className='test'>➜</span></button>
+                    <h1>¿Estas buscando lo mejor en ERP?</h1>
+                    <p>Impulsa la administración, el desarrollo, y el rendimiento de tu negocio o simplemente a los que le sirve con NaturaCifra.</p>
+                    <button className="demo-btn">Probar demo <span className='test'>➜</span></button>
                     {/* </div> */}
                 </div>
             </section>
@@ -53,7 +54,7 @@ const Home = () => {
                     <div className="feature-divider"></div>
                     <div className="feature-content">
                         <div className="feature-graphic">
-                        <img src="src\assets\dash-logos\rentabilidad.webp" alt="rentabilidad" className="feature-image" />
+                            <img src="src\assets\dash-logos\rentabilidad.webp" alt="rentabilidad" className="feature-image" />
                         </div>
                         <div className="feature-text">
                             <h2>¿Porqué NaturaCifra?</h2>
@@ -87,6 +88,7 @@ const Home = () => {
             {/* Contact Form Section */}
             <section className="contact" id="contacto">
                 <div className="contact-container">
+                    <img src="src\assets\home\1teamwork.webp" alt="rentabilidad" className="values-img" />
                     <div className="contact-content">
                         <div className="contact-text">
                             <h2>Contactanos</h2>

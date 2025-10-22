@@ -1,0 +1,25 @@
+:root{
+    --primary-color:#0B5DCC;
+    --secundary-color: #679AD0;
+    --milk-base: #FFFFFF;
+    --bone-base: #F2E2B7;
+    --goldhighlight: #ECBC47;
+    --esmerald-highlight: #14C267;
+    --small-font: 0.75rem;
+    --regular-font: 1rem;
+    --large-font: 1.5rem;
+    /* -- */
+}
+
+p{
+    color:re;
+}
+
+h1{
+    color:re;
+}
+
+h2{
+    color:rd;
+    
+}
