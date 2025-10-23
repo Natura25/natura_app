@@ -1,25 +1,33 @@
-import { Router } from 'express';
+import express from 'express';
+import {
+  login,
+  signup,
+  getSession,
+  logout,
+  authenticateToken,
+  refreshToken,
+  migrateUsers,
+} from '../controllers/authController.js';
 
-import { login, getSession, logout } from '../controllers/authController.js';
+const router = express.Router();
 
-const router = Router();
+// Rutas públicas
+router.post('/login', login);
+router.post('/signup', signup);
+router.post('/refresh', refreshToken);
 
-router.use((req, res, next) => {
-  console.log('🌍 Request Info:', {
-    method: req.method,
-    path: req.path,
-    origin: req.get('Origin'),
-    sessionID: req.sessionID,
-    hasSession: !!req.session?.user,
-    cookies: req.headers.cookie ? 'Cookies present' : 'No cookies',
-    userAgent: req.get('User-Agent')?.substring(0, 50),
+// Rutas que requieren autenticación
+router.get('/session', getSession);
+router.post('/logout', logout);
+
+// Ruta protegida de ejemplo
+router.get('/profile', authenticateToken, (req, res) => {
+  res.json({
+    message: 'Perfil protegido',
+    user: req.user,
   });
-  next();
 });
 
-router.post('/login', login);
-router.get('/session', getSession);
-router.get('/check-session', getSession);
-router.post('/logout', logout);
+router.post('/migrate-users', migrateUsers);
 
 export default router;

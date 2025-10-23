@@ -5,6 +5,8 @@ import ventasRoutes from './routes/ventasController.route.js';
 import cuentasRoutes from './routes/cuentasPorCobrar.route.js';
 import cuentasContablesRoutes from './routes/cuentasContables.route.js';
 import cuentasPorPagarRoutes from './routes/cuentasPorPagar.route.js';
+import inventarioRoutes from './routes/inventario.route.js';
+import costosRoutes from './routes/costos.route.js';
 
 const app = express();
 
@@ -25,39 +27,24 @@ app.use(
   })
 );
 
-// ✅ Debugging simplificado
-app.use((req, res, next) => {
-  console.log('📥 Request:', {
-    method: req.method,
-    path: req.path,
-    origin: req.headers.origin,
-    hasAuth: !!req.headers.authorization, // ← Verificar si tiene JWT
-  });
-
-  // Responder inmediatamente a OPTIONS requests
-  if (req.method === 'OPTIONS') {
-    res.sendStatus(200);
-  } else {
-    next();
-  }
-});
-
-// Rutas
+//! Rutas
 app.use('/api/auth', authRoutes);
 app.use('/api/ventas', ventasRoutes);
 app.use('/api/cuentas', cuentasRoutes);
 app.use('/api/cuentas-contables', cuentasContablesRoutes);
 app.use('/api/cuentas-pagar', cuentasPorPagarRoutes);
+app.use('/api/inventario', inventarioRoutes);
+app.use('/api/reportes', inventarioRoutes);
+app.use('/api/costos', costosRoutes);
 
-app.get('/', (req, res) => {
-  console.log('🏠 Home route hit');
-  res.json({ message: 'Hello World! JWT Auth Server' });
-});
+import expressListEndpoints from 'express-list-endpoints';
+
+console.log('📋 Rutas detectadas:');
+console.table(expressListEndpoints(app));
 
 // Puerto
 const PORT = process.env.PORT ?? 3000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🟢 Server is running on port ${PORT}`);
   console.log(`🔧 NODE_ENV: ${process.env.NODE_ENV}`);
-  console.log(`🔑 Using JWT authentication`);
 });

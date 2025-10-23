@@ -2,6 +2,12 @@ import { Pool } from 'pg';
 import dotenv from 'dotenv';
 dotenv.config();
 
+console.log('Cargando variables DB:', {
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  port: process.env.DB_PORT,
+});
+
 const db = new Pool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
