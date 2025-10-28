@@ -5,6 +5,7 @@ import Home from './home';
 import Login from './Logs';
 import Dashboard from '../pages/Dashboard';
 import './App.css';
+import '../styles/normalize.css';
 
 function AppContent() {
   const { isAuthenticated } = useAuth();
