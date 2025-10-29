@@ -1,251 +1,240 @@
-// inventario.model.js - COMPLETO CON FIX
+// backend/controllers/inventarioController.js - VERSIÓN CORREGIDA
 
-import { supabase } from '../config/supabase.js';
+import inventarioModel from '../models/inventario.model.js';
+import movimientoModel from '../models/movimientoInventario.model.js';
+import {
+  generarReporteInventario,
+  generarReporteMovimientos,
+} from '../services/reportGenerator.js';
 
 export default {
-  async listarProductos(filtros = {}) {
+  //! Obtener todos los productos (usa listarProductos del modelo)
+  async obtenerProductos(req, res) {
     try {
-      let query = supabase
-        .from('inventario')
-        .select(
-          `
-          *,
-          categoria:cuentas_contables!categoria_id(id, codigo, nombre, tipo),
-          proveedor:proveedores(id, nombre),
-          creador:usuarios!creado_por(username),
-          actualizador:usuarios!actualizado_por(username)
-        `,
-          { count: 'exact' }
-        )
-        .eq('activo', true)
-        .order('creado_en', { ascending: false });
-
-      // Filtros
-      if (filtros.busqueda) {
-        query = query.or(
-          `nombre.ilike.%${filtros.busqueda}%,codigo.ilike.%${filtros.busqueda}%`
-        );
-      }
-
-      if (filtros.categoria_id) {
-        query = query.eq('categoria_id', filtros.categoria_id);
-      }
-
-      if (filtros.proveedor_id) {
-        query = query.eq('proveedor_id', filtros.proveedor_id);
-      }
-
-      // Paginación
-      const page = parseInt(filtros.page) || 1;
-      const limit = parseInt(filtros.limit) || 50;
-      const offset = (page - 1) * limit;
-
-      query = query.range(offset, offset + limit - 1);
-
-      const { data, error, count } = await query;
-
-      if (error) throw error;
-
-      return { data, count };
+      console.log('📦 Obteniendo productos con filtros:', req.query);
+      const { data, count } = await inventarioModel.listarProductos(req.query);
+      res.set('X-Total-Count', count).json(data);
     } catch (error) {
-      console.error('❌ Error listando productos:', error);
-      throw error;
+      console.error('❌ Error obteniendo productos:', error);
+      res.status(500).json({ error: error.message });
     }
   },
 
-  async obtenerProductoPorId(id) {
+  //! Obtener un producto específico por ID
+  async obtenerProductoPorId(req, res) {
     try {
-      const { data, error } = await supabase
-        .from('inventario')
-        .select(
-          `
-          *,
-          categoria:cuentas_contables!categoria_id(id, codigo, nombre, tipo),
-          proveedor:proveedores(id, nombre, contacto, telefono),
-          creador:usuarios!creado_por(username, email),
-          actualizador:usuarios!actualizado_por(username, email)
-        `
-        )
-        .eq('id', id)
-        .single();
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('❌ Error obteniendo producto:', error);
-      throw error;
-    }
-  },
-
-  async crearProducto(datos) {
-    try {
-      const { data, error } = await supabase
-        .from('inventario')
-        .insert([
-          {
-            codigo: datos.codigo,
-            nombre: datos.nombre,
-            descripcion: datos.descripcion || null,
-            categoria_id: datos.categoria_id || null,
-            unidad_medida: datos.unidad_medida || 'unidad',
-            cantidad: datos.cantidad || 0,
-            min_stock: datos.min_stock || 0,
-            precio_compra: datos.precio_compra || 0,
-            precio_venta: datos.precio_venta || 0,
-            proveedor_id: datos.proveedor_id || null,
-            ubicacion: datos.ubicacion || null,
-            notas: datos.notas || null,
-            activo: true,
-            creado_por: datos.creado_por,
-            actualizado_por: datos.actualizado_por,
-          },
-        ])
-        .select(
-          `
-          *,
-          categoria:cuentas_contables!categoria_id(id, codigo, nombre, tipo),
-          proveedor:proveedores(id, nombre)
-        `
-        )
-        .single();
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('❌ Error creando producto:', error);
-      throw error;
-    }
-  },
-
-  async actualizarProducto(id, datos) {
-    try {
-      const updateData = {
-        actualizado_por: datos.actualizado_por,
-        actualizado_en: new Date(),
-      };
-
-      // Solo actualizar campos que vengan en datos
-      if (datos.codigo !== undefined) updateData.codigo = datos.codigo;
-      if (datos.nombre !== undefined) updateData.nombre = datos.nombre;
-      if (datos.descripcion !== undefined)
-        updateData.descripcion = datos.descripcion;
-      if (datos.categoria_id !== undefined)
-        updateData.categoria_id = datos.categoria_id;
-      if (datos.unidad_medida !== undefined)
-        updateData.unidad_medida = datos.unidad_medida;
-      if (datos.cantidad !== undefined) updateData.cantidad = datos.cantidad;
-      if (datos.min_stock !== undefined) updateData.min_stock = datos.min_stock;
-      if (datos.precio_compra !== undefined)
-        updateData.precio_compra = datos.precio_compra;
-      if (datos.precio_venta !== undefined)
-        updateData.precio_venta = datos.precio_venta;
-      if (datos.proveedor_id !== undefined)
-        updateData.proveedor_id = datos.proveedor_id;
-      if (datos.ubicacion !== undefined) updateData.ubicacion = datos.ubicacion;
-      if (datos.notas !== undefined) updateData.notas = datos.notas;
-
-      const { data, error } = await supabase
-        .from('inventario')
-        .update(updateData)
-        .eq('id', id)
-        .select(
-          `
-          *,
-          categoria:cuentas_contables!categoria_id(id, codigo, nombre, tipo),
-          proveedor:proveedores(id, nombre)
-        `
-        )
-        .single();
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('❌ Error actualizando producto:', error);
-      throw error;
-    }
-  },
-
-  async eliminarProducto(id) {
-    try {
-      // Soft delete
-      const { data, error } = await supabase
-        .from('inventario')
-        .update({ activo: false })
-        .eq('id', id);
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('❌ Error eliminando producto:', error);
-      throw error;
-    }
-  },
-
-  async actualizarStock(productoId, cantidad, tipo) {
-    try {
-      const { data: producto, error: fetchError } = await supabase
-        .from('inventario')
-        .select('cantidad')
-        .eq('id', productoId)
-        .single();
-
-      if (fetchError) throw fetchError;
-
-      const nuevaCantidad = producto.cantidad + cantidad;
-
-      if (nuevaCantidad < 0) {
-        throw new Error('Stock insuficiente');
-      }
-
-      const { data, error } = await supabase
-        .from('inventario')
-        .update({
-          cantidad: nuevaCantidad,
-          actualizado_en: new Date(),
-        })
-        .eq('id', productoId)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('❌ Error actualizando stock:', error);
-      throw error;
-    }
-  },
-
-  async obtenerProductosStockBajo() {
-    try {
-      // Obtener todos los productos activos
-      const { data, error } = await supabase
-        .from('inventario')
-        .select(
-          `
-          id,
-          codigo,
-          nombre,
-          cantidad,
-          min_stock,
-          categoria:cuentas_contables!categoria_id(nombre, codigo)
-        `
-        )
-        .eq('activo', true);
-
-      if (error) throw error;
-
-      // Filtrar en JavaScript los productos con stock bajo
-      const productosStockBajo = data.filter(
-        (producto) => producto.cantidad <= producto.min_stock
+      const producto = await inventarioModel.obtenerProductoPorId(
+        req.params.id
       );
 
-      // Ordenar por cantidad ascendente
-      productosStockBajo.sort((a, b) => a.cantidad - b.cantidad);
+      if (!producto) {
+        return res.status(404).json({ error: 'Producto no encontrado' });
+      }
 
-      return productosStockBajo;
+      res.json(producto);
     } catch (error) {
-      console.error('❌ Error obteniendo productos con stock bajo:', error);
-      throw error;
+      console.error('❌ Error obteniendo producto:', error);
+      res.status(500).json({ error: error.message });
+    }
+  },
+
+  //! Crear producto
+  async crearProducto(req, res) {
+    try {
+      console.log('➕ Creando producto:', req.body);
+      const producto = await inventarioModel.crearProducto({
+        ...req.body,
+        creado_por: req.user.id,
+        actualizado_por: req.user.id,
+      });
+      res.status(201).json(producto);
+    } catch (error) {
+      console.error('❌ Error creando producto:', error);
+      res.status(400).json({ error: error.message });
+    }
+  },
+
+  //! Actualizar producto
+  async actualizarProducto(req, res) {
+    try {
+      console.log('✏️ Actualizando producto:', req.params.id);
+      const producto = await inventarioModel.actualizarProducto(req.params.id, {
+        ...req.body,
+        actualizado_por: req.user.id,
+      });
+      res.json(producto);
+    } catch (error) {
+      console.error('❌ Error actualizando producto:', error);
+      res.status(400).json({ error: error.message });
+    }
+  },
+
+  //! Eliminar producto (soft delete)
+  async eliminarProducto(req, res) {
+    try {
+      console.log('🗑️ Eliminando producto:', req.params.id);
+      await inventarioModel.eliminarProducto(req.params.id);
+      res.json({ message: 'Producto eliminado exitosamente' });
+    } catch (error) {
+      console.error('❌ Error eliminando producto:', error);
+      res.status(400).json({ error: error.message });
+    }
+  },
+
+  //! Registrar entrada de inventario
+  async registrarEntrada(req, res) {
+    try {
+      console.log('📥 Registrando entrada:', req.body);
+      const movimiento = await movimientoModel.registrarMovimiento({
+        ...req.body,
+        tipo: 'entrada',
+        usuario_id: req.user.id,
+      });
+
+      await inventarioModel.actualizarStock(
+        req.body.producto_id,
+        req.body.cantidad,
+        'entrada'
+      );
+
+      res.status(201).json(movimiento);
+    } catch (error) {
+      console.error('❌ Error registrando entrada:', error);
+      res.status(400).json({ error: error.message });
+    }
+  },
+
+  //! Registrar salida de inventario
+  async registrarSalida(req, res) {
+    try {
+      console.log('📤 Registrando salida:', req.body);
+      const movimiento = await movimientoModel.registrarMovimiento({
+        ...req.body,
+        tipo: 'salida',
+        usuario_id: req.user.id,
+      });
+
+      await inventarioModel.actualizarStock(
+        req.body.producto_id,
+        -req.body.cantidad,
+        'salida'
+      );
+
+      res.status(201).json(movimiento);
+    } catch (error) {
+      console.error('❌ Error registrando salida:', error);
+      res.status(400).json({ error: error.message });
+    }
+  },
+
+  //! Registrar ajuste de inventario
+  async registrarAjuste(req, res) {
+    try {
+      console.log('⚙️ Registrando ajuste:', req.body);
+      const { producto_id, cantidad, motivo } = req.body;
+      const tipo = cantidad >= 0 ? 'ajuste_entrada' : 'ajuste_salida';
+
+      const movimiento = await movimientoModel.registrarMovimiento({
+        producto_id,
+        cantidad: Math.abs(cantidad),
+        tipo,
+        motivo,
+        usuario_id: req.user.id,
+      });
+
+      await inventarioModel.actualizarStock(producto_id, cantidad, tipo);
+      res.status(201).json(movimiento);
+    } catch (error) {
+      console.error('❌ Error registrando ajuste:', error);
+      res.status(400).json({ error: error.message });
+    }
+  },
+
+  //! Obtener movimientos
+  async obtenerMovimientos(req, res) {
+    try {
+      console.log('📋 Obteniendo movimientos con filtros:', req.query);
+      const { data, count } = await movimientoModel.obtenerMovimientos(
+        req.query
+      );
+      res.set('X-Total-Count', count).json(data);
+    } catch (error) {
+      console.error('❌ Error obteniendo movimientos:', error);
+      res.status(500).json({ error: error.message });
+    }
+  },
+
+  //! Generar reporte de inventario
+  async reporteInventario(req, res) {
+    try {
+      console.log('📄 Generando reporte de inventario...');
+      const { formato = 'pdf' } = req.query;
+      const { data: productos } = await inventarioModel.listarProductos();
+
+      const reporte = await generarReporteInventario(productos, formato);
+
+      res.setHeader(
+        'Content-Type',
+        formato === 'excel'
+          ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+          : 'application/pdf'
+      );
+
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename=reporte-inventario-${Date.now()}.${
+          formato === 'excel' ? 'xlsx' : 'pdf'
+        }`
+      );
+
+      res.send(reporte);
+    } catch (error) {
+      console.error('❌ Error en reporteInventario:', error);
+      res.status(500).json({ error: error.message });
+    }
+  },
+
+  //! Generar reporte de movimientos
+  async reporteMovimientos(req, res) {
+    try {
+      console.log('📄 Generando reporte de movimientos...');
+      const { formato = 'pdf', ...filtros } = req.query;
+      const { data: movimientos } = await movimientoModel.obtenerMovimientos(
+        filtros
+      );
+
+      const reporte = await generarReporteMovimientos(movimientos, formato);
+
+      res.setHeader(
+        'Content-Type',
+        formato === 'excel'
+          ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+          : 'application/pdf'
+      );
+
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename=reporte-movimientos-${Date.now()}.${
+          formato === 'excel' ? 'xlsx' : 'pdf'
+        }`
+      );
+
+      res.send(reporte);
+    } catch (error) {
+      console.error('❌ Error en reporteMovimientos:', error);
+      res.status(500).json({ error: error.message });
+    }
+  },
+
+  //! Obtener alertas de stock bajo
+  async obtenerAlertasStock(req, res) {
+    try {
+      console.log('🔔 Obteniendo alertas de stock bajo...');
+      const productos = await inventarioModel.obtenerProductosStockBajo();
+      res.json(productos);
+    } catch (error) {
+      console.error('❌ Error obteniendo alertas:', error);
+      res.status(500).json({ error: error.message });
     }
   },
 };
