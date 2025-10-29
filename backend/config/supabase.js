@@ -1,25 +1,23 @@
-// backend/config/supabase.js
-import dotenv from 'dotenv';
-dotenv.config(); // Carga el .env automáticamente desde backend/
-
+// config/supabase.js
 import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
 
-console.log('Verificando variables en supabase.js:');
-console.log('SUPABASE_URL:', process.env.SUPABASE_URL ? 'Cargada' : 'Faltante');
-console.log(
-  'SUPABASE_SERVICE_KEY:',
-  process.env.SUPABASE_SERVICE_KEY ? 'Cargada' : 'Faltante'
-);
+dotenv.config();
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
-  console.error('Variables faltantes:');
-  console.error('SUPABASE_URL:', SUPABASE_URL);
-  console.error('SUPABASE_SERVICE_KEY:', SUPABASE_SERVICE_KEY);
-  throw new Error('Faltan variables de configuración de Supabase');
+if (!supabaseUrl || !supabaseKey) {
+  console.error('❌ Faltan variables de entorno de Supabase');
+  throw new Error('SUPABASE_URL y SUPABASE_KEY son requeridos');
 }
 
-console.log('Supabase configurado correctamente');
-export const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: false,
+    detectSessionInUrl: false,
+  },
+});
+
+console.log('✅ Supabase cliente inicializado');

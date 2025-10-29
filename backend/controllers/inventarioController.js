@@ -6,6 +6,35 @@ import {
 } from '../services/reportGenerator.js';
 
 export default {
+  //! Listar todos los productos del inventario
+  async obtenerProductos(req, res) {
+    try {
+      const { data, count } = await inventarioModel.listarProductos(req.query);
+      res.set('X-Total-Count', count).json(data);
+    } catch (error) {
+      console.error('❌ Error obteniendo productos:', error);
+      res.status(500).json({ error: error.message });
+    }
+  }, // ← Faltaba esta coma
+
+  //! Obtener un producto específico por ID
+  async obtenerProductoPorId(req, res) {
+    try {
+      const producto = await inventarioModel.obtenerProductoPorId(
+        req.params.id
+      );
+
+      if (!producto) {
+        return res.status(404).json({ error: 'Producto no encontrado' });
+      }
+
+      res.json(producto);
+    } catch (error) {
+      console.error('❌ Error obteniendo producto:', error);
+      res.status(500).json({ error: error.message });
+    }
+  },
+
   //! Gestión de Productos
   async crearProducto(req, res) {
     try {
@@ -16,6 +45,7 @@ export default {
       });
       res.status(201).json(producto);
     } catch (error) {
+      console.error('❌ Error creando producto:', error);
       res.status(400).json({ error: error.message });
     }
   },
@@ -28,6 +58,7 @@ export default {
       });
       res.json(producto);
     } catch (error) {
+      console.error('❌ Error actualizando producto:', error);
       res.status(400).json({ error: error.message });
     }
   },
@@ -37,7 +68,19 @@ export default {
       const { data, count } = await inventarioModel.listarProductos(req.query);
       res.set('X-Total-Count', count).json(data);
     } catch (error) {
+      console.error('❌ Error listando productos:', error);
       res.status(500).json({ error: error.message });
+    }
+  },
+
+  //! Eliminar producto (soft delete)
+  async eliminarProducto(req, res) {
+    try {
+      await inventarioModel.eliminarProducto(req.params.id);
+      res.json({ message: 'Producto eliminado exitosamente' });
+    } catch (error) {
+      console.error('❌ Error eliminando producto:', error);
+      res.status(400).json({ error: error.message });
     }
   },
 
@@ -50,7 +93,6 @@ export default {
         usuario_id: req.user.id,
       });
 
-      //! Actualizar stock
       await inventarioModel.actualizarStock(
         req.body.producto_id,
         req.body.cantidad,
@@ -59,6 +101,7 @@ export default {
 
       res.status(201).json(movimiento);
     } catch (error) {
+      console.error('❌ Error registrando entrada:', error);
       res.status(400).json({ error: error.message });
     }
   },
@@ -79,6 +122,7 @@ export default {
 
       res.status(201).json(movimiento);
     } catch (error) {
+      console.error('❌ Error registrando salida:', error);
       res.status(400).json({ error: error.message });
     }
   },
@@ -99,7 +143,21 @@ export default {
       await inventarioModel.actualizarStock(producto_id, cantidad, tipo);
       res.status(201).json(movimiento);
     } catch (error) {
+      console.error('❌ Error registrando ajuste:', error);
       res.status(400).json({ error: error.message });
+    }
+  },
+
+  //! Obtener movimientos
+  async obtenerMovimientos(req, res) {
+    try {
+      const { data, count } = await movimientoModel.obtenerMovimientos(
+        req.query
+      );
+      res.set('X-Total-Count', count).json(data);
+    } catch (error) {
+      console.error('❌ Error obteniendo movimientos:', error);
+      res.status(500).json({ error: error.message });
     }
   },
 
@@ -120,7 +178,9 @@ export default {
 
       res.setHeader(
         'Content-Disposition',
-        `attachment; filename=reporte-inventario-${Date.now()}.${formato}`
+        `attachment; filename=reporte-inventario-${Date.now()}.${
+          formato === 'excel' ? 'xlsx' : 'pdf'
+        }`
       );
 
       res.send(reporte);
@@ -148,7 +208,9 @@ export default {
 
       res.setHeader(
         'Content-Disposition',
-        `attachment; filename=reporte-movimientos-${Date.now()}.${formato}`
+        `attachment; filename=reporte-movimientos-${Date.now()}.${
+          formato === 'excel' ? 'xlsx' : 'pdf'
+        }`
       );
 
       res.send(reporte);
@@ -164,6 +226,7 @@ export default {
       const productos = await inventarioModel.obtenerProductosStockBajo();
       res.json(productos);
     } catch (error) {
+      console.error('❌ Error obteniendo alertas:', error);
       res.status(500).json({ error: error.message });
     }
   },
