@@ -216,21 +216,9 @@ export default {
 
   async obtenerProductosStockBajo() {
     try {
-      const { data, error } = await supabase
-        .from('inventario')
-        .select(
-          `
-          id,
-          codigo,
-          nombre,
-          cantidad,
-          min_stock,
-          categoria:cuentas_contables!categoria_id(nombre, codigo)
-        `
-        )
-        .eq('activo', true)
-        .filter('cantidad', 'lte', supabase.raw('min_stock'))
-        .order('cantidad', { ascending: true });
+      const { data, error } = await supabase.rpc(
+        'obtener_productos_stock_bajo'
+      );
 
       if (error) throw error;
       return data;

@@ -31,10 +31,9 @@ app.use(
 app.use('/api/auth', authRoutes);
 app.use('/api/ventas', ventasRoutes);
 app.use('/api/cuentas', cuentasRoutes);
-app.use('/api/cuentas-contables', cuentasContablesRoutes);
+app.use('/api/contabilidad', cuentasContablesRoutes);
 app.use('/api/cuentas-pagar', cuentasPorPagarRoutes);
 app.use('/api/inventario', inventarioRoutes);
-app.use('/api/reportes', inventarioRoutes);
 app.use('/api/costos', costosRoutes);
 
 import expressListEndpoints from 'express-list-endpoints';
