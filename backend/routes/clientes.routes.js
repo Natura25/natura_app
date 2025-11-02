@@ -1,4 +1,4 @@
-// routes/clientes.routes.js - COMPLETO (ES modules)
+// routes/clientes.routes.js
 import express from 'express';
 import ClientesController from '../controllers/clientes.controller.js';
 import { verificarToken } from '../middlewares/auth.js';
@@ -6,7 +6,6 @@ import { verificarToken } from '../middlewares/auth.js';
 const router = express.Router();
 
 // ============= PROTEGER TODAS LAS RUTAS =============
-
 router.use(verificarToken);
 
 // ============= RUTAS ESPECIALES (antes de :id) =============

@@ -1,9 +1,9 @@
 // models/cliente.model.js
 import { supabase } from '../config/supabase.js';
 
-export default class Cliente {
+export default {
   // ============= OBTENER TODOS =============
-  static async obtenerTodos(filtros = {}) {
+  async obtenerTodos(filtros = {}) {
     try {
       console.log('📋 Obteniendo clientes desde Supabase...');
 
@@ -18,10 +18,15 @@ export default class Cliente {
         )
         .eq('activo', true);
 
-      if (filtros.tipo_cliente)
+      if (filtros.tipo_cliente) {
         query = query.eq('tipo_cliente', filtros.tipo_cliente);
-      if (filtros.ciudad) query = query.eq('ciudad', filtros.ciudad);
-      if (filtros.provincia) query = query.eq('provincia', filtros.provincia);
+      }
+      if (filtros.ciudad) {
+        query = query.eq('ciudad', filtros.ciudad);
+      }
+      if (filtros.provincia) {
+        query = query.eq('provincia', filtros.provincia);
+      }
 
       query = query.order('nombre', { ascending: true });
 
@@ -44,10 +49,10 @@ export default class Cliente {
       console.error('❌ Error en Cliente.obtenerTodos:', error);
       throw error;
     }
-  }
+  },
 
   // ============= OBTENER POR ID =============
-  static async obtenerPorId(id) {
+  async obtenerPorId(id) {
     try {
       console.log(`🔍 Obteniendo cliente ID: ${id}`);
 
@@ -94,10 +99,10 @@ export default class Cliente {
       console.error('❌ Error en Cliente.obtenerPorId:', error);
       throw error;
     }
-  }
+  },
 
   // ============= BUSCAR =============
-  static async buscar(criterios) {
+  async buscar(criterios) {
     try {
       console.log('🔎 Buscando clientes...', criterios);
 
@@ -106,19 +111,29 @@ export default class Cliente {
         .select('*, cuentas:cuentas_por_cobrar(monto_pendiente)')
         .eq('activo', true);
 
-      if (criterios.cedula)
+      if (criterios.cedula) {
         query = query.ilike('cedula', `%${criterios.cedula}%`);
-      if (criterios.rnc) query = query.ilike('rnc', `%${criterios.rnc}%`);
-      if (criterios.nombre)
+      }
+      if (criterios.rnc) {
+        query = query.ilike('rnc', `%${criterios.rnc}%`);
+      }
+      if (criterios.nombre) {
         query = query.or(
           `nombre.ilike.%${criterios.nombre}%,nombre_comercial.ilike.%${criterios.nombre}%`
         );
-      if (criterios.telefono)
+      }
+      if (criterios.telefono) {
         query = query.ilike('telefono', `%${criterios.telefono}%`);
-      if (criterios.email) query = query.ilike('email', `%${criterios.email}%`);
-      if (criterios.tipo_cliente)
+      }
+      if (criterios.email) {
+        query = query.ilike('email', `%${criterios.email}%`);
+      }
+      if (criterios.tipo_cliente) {
         query = query.eq('tipo_cliente', criterios.tipo_cliente);
-      if (criterios.ciudad) query = query.eq('ciudad', criterios.ciudad);
+      }
+      if (criterios.ciudad) {
+        query = query.eq('ciudad', criterios.ciudad);
+      }
 
       query = query.order('nombre', { ascending: true }).limit(50);
 
@@ -137,10 +152,10 @@ export default class Cliente {
       console.error('❌ Error en Cliente.buscar:', error);
       throw error;
     }
-  }
+  },
 
   // ============= CREAR =============
-  static async crear(clienteData) {
+  async crear(clienteData) {
     try {
       console.log('➕ Creando cliente:', clienteData.nombre);
 
@@ -153,8 +168,10 @@ export default class Cliente {
             .eq(campo, clienteData[campo])
             .eq('activo', true)
             .single();
-          if (existente)
+
+          if (existente) {
             throw new Error(`Ya existe un cliente con ese ${campo}`);
+          }
         }
       }
 
@@ -171,15 +188,17 @@ export default class Cliente {
       console.error('❌ Error en Cliente.crear:', error);
       throw error;
     }
-  }
+  },
 
   // ============= ACTUALIZAR =============
-  static async actualizar(id, clienteData) {
+  async actualizar(id, clienteData) {
     try {
       console.log(`✏️ Actualizando cliente ID: ${id}`);
 
       const clienteExiste = await this.obtenerPorId(id);
-      if (!clienteExiste) throw new Error('Cliente no encontrado');
+      if (!clienteExiste) {
+        throw new Error('Cliente no encontrado');
+      }
 
       const { data, error } = await supabase
         .from('clientes')
@@ -195,10 +214,10 @@ export default class Cliente {
       console.error('❌ Error en Cliente.actualizar:', error);
       throw error;
     }
-  }
+  },
 
   // ============= ELIMINAR =============
-  static async eliminar(id) {
+  async eliminar(id) {
     try {
       console.log(`🗑️ Desactivando cliente ID: ${id}`);
 
@@ -207,10 +226,11 @@ export default class Cliente {
         .select('*', { count: 'exact', head: true })
         .eq('cliente_id', id);
 
-      if (ventasCount > 0)
+      if (ventasCount > 0) {
         throw new Error(
           'No se puede eliminar un cliente con ventas registradas.'
         );
+      }
 
       const { count: cuentasCount } = await supabase
         .from('cuentas_por_cobrar')
@@ -218,15 +238,17 @@ export default class Cliente {
         .eq('cliente_id', id)
         .eq('estado', 'pendiente');
 
-      if (cuentasCount > 0)
+      if (cuentasCount > 0) {
         throw new Error(
           'No se puede eliminar un cliente con cuentas pendientes'
         );
+      }
 
       const { error } = await supabase
         .from('clientes')
         .update({ activo: false })
         .eq('id', id);
+
       if (error) throw error;
 
       console.log('✅ Cliente desactivado correctamente');
@@ -235,15 +257,16 @@ export default class Cliente {
       console.error('❌ Error en Cliente.eliminar:', error);
       throw error;
     }
-  }
+  },
 
   // ============= ESTADÍSTICAS =============
-  static async obtenerEstadisticas() {
+  async obtenerEstadisticas() {
     try {
       const { data, error } = await supabase
         .from('clientes')
         .select('tipo_cliente, es_empresa, limite_credito')
         .eq('activo', true);
+
       if (error) throw error;
 
       const stats = {
@@ -267,15 +290,16 @@ export default class Cliente {
       console.error('❌ Error en Cliente.obtenerEstadisticas:', error);
       throw error;
     }
-  }
+  },
 
   // ============= TOP CLIENTES =============
-  static async obtenerTopClientes(limite = 10) {
+  async obtenerTopClientes(limite = 10) {
     try {
       const { data, error } = await supabase
         .from('clientes')
         .select('*, ventas:ventas(monto, estado)')
         .eq('activo', true);
+
       if (error) throw error;
 
       return data
@@ -298,10 +322,10 @@ export default class Cliente {
       console.error('❌ Error en Cliente.obtenerTopClientes:', error);
       throw error;
     }
-  }
+  },
 
   // ============= CLIENTES CON DEUDA =============
-  static async obtenerClientesConDeuda() {
+  async obtenerClientesConDeuda() {
     try {
       const { data, error } = await supabase
         .from('clientes')
@@ -309,6 +333,7 @@ export default class Cliente {
           '*, cuentas:cuentas_por_cobrar(monto_pendiente, fecha_vencimiento, estado)'
         )
         .eq('activo', true);
+
       if (error) throw error;
 
       return data
@@ -338,5 +363,5 @@ export default class Cliente {
       console.error('❌ Error en Cliente.obtenerClientesConDeuda:', error);
       throw error;
     }
-  }
-}
+  },
+};

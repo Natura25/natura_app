@@ -5,7 +5,7 @@ export default {
   /**
    * Obtener todos los clientes (con filtros opcionales)
    */
-  async getClientes(req, res) {
+  async obtenerTodos(req, res) {
     try {
       const filtros = {
         tipo_cliente: req.query.tipo_cliente,
@@ -20,7 +20,7 @@ export default {
       res.set('X-Total-Count', clientes.length);
       res.json(clientes);
     } catch (error) {
-      console.error('❌ Error en getClientes:', error);
+      console.error('❌ Error en obtenerTodos:', error);
       res.status(500).json({
         error: 'Error al obtener clientes',
         detalle: error.message,
@@ -31,7 +31,7 @@ export default {
   /**
    * Obtener cliente por ID
    */
-  async getClienteById(req, res) {
+  async obtenerPorId(req, res) {
     try {
       const { id } = req.params;
       console.log(`🔍 Buscando cliente ID: ${id}`);
@@ -44,7 +44,7 @@ export default {
 
       res.json(cliente);
     } catch (error) {
-      console.error('❌ Error en getClienteById:', error);
+      console.error('❌ Error en obtenerPorId:', error);
       res.status(500).json({
         error: 'Error al obtener cliente',
         detalle: error.message,
@@ -55,7 +55,7 @@ export default {
   /**
    * Buscar clientes por criterios
    */
-  async buscarClientes(req, res) {
+  async buscar(req, res) {
     try {
       const criterios = {
         cedula: req.query.cedula,
@@ -72,7 +72,7 @@ export default {
       const clientes = await ClienteModel.buscar(criterios);
       res.json(clientes);
     } catch (error) {
-      console.error('❌ Error en buscarClientes:', error);
+      console.error('❌ Error en buscar:', error);
       res.status(500).json({
         error: 'Error al buscar clientes',
         detalle: error.message,
@@ -83,7 +83,7 @@ export default {
   /**
    * Crear nuevo cliente
    */
-  async createCliente(req, res) {
+  async crear(req, res) {
     try {
       const data = req.body;
       console.log('➕ Creando cliente:', data.nombre);
@@ -127,7 +127,7 @@ export default {
         cliente: nuevoCliente,
       });
     } catch (error) {
-      console.error('❌ Error en createCliente:', error);
+      console.error('❌ Error en crear:', error);
       res.status(500).json({
         error: 'Error al crear cliente',
         detalle: error.message,
@@ -138,7 +138,7 @@ export default {
   /**
    * Actualizar cliente existente
    */
-  async updateCliente(req, res) {
+  async actualizar(req, res) {
     try {
       const { id } = req.params;
       const data = req.body;
@@ -171,7 +171,7 @@ export default {
         cliente: clienteActualizado,
       });
     } catch (error) {
-      console.error('❌ Error en updateCliente:', error);
+      console.error('❌ Error en actualizar:', error);
       res.status(500).json({
         error: 'Error al actualizar cliente',
         detalle: error.message,
@@ -182,7 +182,7 @@ export default {
   /**
    * Eliminar cliente
    */
-  async deleteCliente(req, res) {
+  async eliminar(req, res) {
     try {
       const { id } = req.params;
       console.log(`🗑️ Eliminando cliente ID: ${id}`);
@@ -194,7 +194,7 @@ export default {
         resultado,
       });
     } catch (error) {
-      console.error('❌ Error en deleteCliente:', error);
+      console.error('❌ Error en eliminar:', error);
       res.status(500).json({
         error: 'Error al eliminar cliente',
         detalle: error.message,
@@ -205,13 +205,13 @@ export default {
   /**
    * Obtener estadísticas de clientes
    */
-  async getEstadisticasClientes(req, res) {
+  async obtenerEstadisticas(req, res) {
     try {
       console.log('📊 Obteniendo estadísticas de clientes...');
       const stats = await ClienteModel.obtenerEstadisticas();
       res.json(stats);
     } catch (error) {
-      console.error('❌ Error en getEstadisticasClientes:', error);
+      console.error('❌ Error en obtenerEstadisticas:', error);
       res.status(500).json({
         error: 'Error al obtener estadísticas',
         detalle: error.message,
@@ -222,7 +222,7 @@ export default {
   /**
    * Obtener top clientes
    */
-  async getTopClientes(req, res) {
+  async obtenerTopClientes(req, res) {
     try {
       const limite = parseInt(req.query.limite) || 10;
       console.log(`🏆 Obteniendo top ${limite} clientes...`);
@@ -230,7 +230,7 @@ export default {
       const clientes = await ClienteModel.obtenerTopClientes(limite);
       res.json(clientes);
     } catch (error) {
-      console.error('❌ Error en getTopClientes:', error);
+      console.error('❌ Error en obtenerTopClientes:', error);
       res.status(500).json({
         error: 'Error al obtener top clientes',
         detalle: error.message,
@@ -241,7 +241,7 @@ export default {
   /**
    * Obtener clientes con deuda
    */
-  async getClientesConDeuda(req, res) {
+  async obtenerClientesConDeuda(req, res) {
     try {
       console.log('💰 Obteniendo clientes con deuda...');
       const clientes = await ClienteModel.obtenerClientesConDeuda();
@@ -256,7 +256,7 @@ export default {
         },
       });
     } catch (error) {
-      console.error('❌ Error en getClientesConDeuda:', error);
+      console.error('❌ Error en obtenerClientesConDeuda:', error);
       res.status(500).json({
         error: 'Error al obtener clientes con deuda',
         detalle: error.message,
