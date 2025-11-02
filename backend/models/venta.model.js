@@ -36,17 +36,17 @@ export default {
         .from('ventas')
         .select(
           `
-          *,
-          cliente:clientes(id, nombre, telefono, email),
-          usuario:usuarios!fk_ventas_auth_id(auth_id, nombre, email),
-          items:venta_items(
-            id,
-            cantidad,
-            precio_unitario,
-            subtotal,
-            producto:inventario(id, codigo, nombre, precio_venta)
-          )
-        `
+        *,
+        cliente:clientes(id, nombre, telefono, email),
+        usuario:usuarios!fk_ventas_auth_id(auth_id, username, email),
+        items:venta_items(
+          id,
+          cantidad,
+          precio_unitario,
+          subtotal,
+          producto:inventario(id, codigo, nombre, precio_venta)
+        )
+      `
         )
         .order('fecha_venta', { ascending: false });
 
@@ -102,7 +102,7 @@ export default {
           `
           *,
           cliente:clientes(id, nombre, telefono, email, direccion),
-          usuario:usuarios!fk_ventas_auth_id(auth_id, nombre, email),
+          usuario:usuarios!fk_ventas_auth_id(auth_id, username, email),
           items:venta_items(
             id,
             cantidad,
