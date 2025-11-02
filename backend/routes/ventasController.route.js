@@ -13,7 +13,8 @@ import { verificarToken } from '../middlewares/auth.js'; // Usa el middleware co
 const router = Router();
 
 // Proteger todas las rutas de ventas
-router.use(authMiddleware);
+
+router.use(verificarToken);
 
 // ============= RUTAS DE CONSULTA =============
 
