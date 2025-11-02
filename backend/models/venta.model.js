@@ -1,4 +1,4 @@
-// backend/models/venta.model.js - VERSIÓN SUPABASE CON INTEGRACIÓN DE INVENTARIO
+// backend/models/venta.model.js - VERSIÓN CORREGIDA
 
 import { supabase } from '../config/supabase.js';
 import inventarioModel from './inventario.model.js';
@@ -38,7 +38,7 @@ export default {
           `
           *,
           cliente:clientes(id, nombre, telefono, email),
-          usuario:"auth.users"!fk_ventas_creado_por(id, email),
+          usuario:usuarios!fk_ventas_creado_por(id, nombre, email),
           items:venta_items(
             id,
             cantidad,
@@ -102,7 +102,7 @@ export default {
           `
           *,
           cliente:clientes(id, nombre, telefono, email, direccion),
-          usuario:"auth.users"!fk_ventas_creado_por(id, email)
+          usuario:usuarios!fk_ventas_creado_por(id, nombre, email),
           items:venta_items(
             id,
             cantidad,
