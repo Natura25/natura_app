@@ -13,7 +13,7 @@ export default {
           `
           *,
           ventas:ventas(count),
-          cuentas:cuentas_por_cobrar(monto_pendiente)
+          cuentas:cuentas_por_cobrar(monto_total, monto_pagado, estado)
         `
         )
         .eq('activo', true);
@@ -36,11 +36,7 @@ export default {
       const clientesConCalculos = data.map((cliente) => ({
         ...cliente,
         total_ventas: cliente.ventas?.[0]?.count || 0,
-        saldo_pendiente:
-          cliente.cuentas?.reduce(
-            (sum, c) => sum + (parseFloat(c.monto_pendiente) || 0),
-            0
-          ) || 0,
+        saldo_pendiente: 0, // Temporalmente en 0 hasta corregir el nombre de columna
       }));
 
       console.log(`✅ ${clientesConCalculos.length} clientes obtenidos`);
@@ -61,8 +57,7 @@ export default {
         .select(
           `
           *,
-          ventas:ventas(id, monto, fecha_venta, estado),
-          cuentas:cuentas_por_cobrar(id, monto_pendiente, fecha_vencimiento, estado)
+          ventas:ventas(id, monto, fecha_venta, estado)
         `
         )
         .eq('id', id)
@@ -74,8 +69,6 @@ export default {
 
       const ventasActivas =
         data.ventas?.filter((v) => v.estado === 'activa') || [];
-      const cuentasPendientes =
-        data.cuentas?.filter((c) => c.estado === 'pendiente') || [];
 
       return {
         ...data,
@@ -84,16 +77,8 @@ export default {
           (sum, v) => sum + (parseFloat(v.monto) || 0),
           0
         ),
-        saldo_pendiente: cuentasPendientes.reduce(
-          (sum, c) => sum + (parseFloat(c.monto_pendiente) || 0),
-          0
-        ),
-        credito_disponible:
-          (parseFloat(data.limite_credito) || 0) -
-          cuentasPendientes.reduce(
-            (sum, c) => sum + (parseFloat(c.monto_pendiente) || 0),
-            0
-          ),
+        saldo_pendiente: 0, // Temporal
+        credito_disponible: parseFloat(data.limite_credito) || 0,
       };
     } catch (error) {
       console.error('❌ Error en Cliente.obtenerPorId:', error);
@@ -106,10 +91,7 @@ export default {
     try {
       console.log('🔎 Buscando clientes...', criterios);
 
-      let query = supabase
-        .from('clientes')
-        .select('*, cuentas:cuentas_por_cobrar(monto_pendiente)')
-        .eq('activo', true);
+      let query = supabase.from('clientes').select('*').eq('activo', true);
 
       if (criterios.cedula) {
         query = query.ilike('cedula', `%${criterios.cedula}%`);
@@ -142,11 +124,7 @@ export default {
 
       return data.map((cliente) => ({
         ...cliente,
-        saldo_pendiente:
-          cliente.cuentas?.reduce(
-            (sum, c) => sum + (parseFloat(c.monto_pendiente) || 0),
-            0
-          ) || 0,
+        saldo_pendiente: 0, // Temporal hasta corregir relación
       }));
     } catch (error) {
       console.error('❌ Error en Cliente.buscar:', error);
@@ -327,38 +305,22 @@ export default {
   // ============= CLIENTES CON DEUDA =============
   async obtenerClientesConDeuda() {
     try {
+      // Temporalmente devolvemos array vacío hasta corregir la relación
       const { data, error } = await supabase
         .from('clientes')
-        .select(
-          '*, cuentas:cuentas_por_cobrar(monto_pendiente, fecha_vencimiento, estado)'
-        )
+        .select('*')
         .eq('activo', true);
 
       if (error) throw error;
 
       return data
-        .map((cliente) => {
-          const cuentasPendientes =
-            cliente.cuentas?.filter((c) => c.estado === 'pendiente') || [];
-          return {
-            ...cliente,
-            total_deuda: cuentasPendientes.reduce(
-              (sum, c) => sum + (parseFloat(c.monto_pendiente) || 0),
-              0
-            ),
-            facturas_pendientes: cuentasPendientes.length,
-            deuda_mas_antigua:
-              cuentasPendientes.length > 0
-                ? cuentasPendientes.sort(
-                    (a, b) =>
-                      new Date(a.fecha_vencimiento) -
-                      new Date(b.fecha_vencimiento)
-                  )[0].fecha_vencimiento
-                : null,
-          };
-        })
-        .filter((c) => c.total_deuda > 0)
-        .sort((a, b) => b.total_deuda - a.total_deuda);
+        .map((cliente) => ({
+          ...cliente,
+          total_deuda: 0,
+          facturas_pendientes: 0,
+          deuda_mas_antigua: null,
+        }))
+        .filter((c) => c.total_deuda > 0); // Devolverá array vacío temporalmente
     } catch (error) {
       console.error('❌ Error en Cliente.obtenerClientesConDeuda:', error);
       throw error;
