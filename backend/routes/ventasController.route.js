@@ -8,7 +8,7 @@ import {
   anularVenta,
   getReporteVentas,
 } from '../controllers/ventasController.js';
-import { authMiddleware } from '../middlewares/authMiddleware.js';
+import { verificarToken } from '../middlewares/auth.js'; // Usa el middleware correcto
 
 const router = Router();
 

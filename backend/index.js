@@ -7,6 +7,7 @@ import cuentasContablesRoutes from './routes/cuentasContables.route.js';
 import cuentasPorPagarRoutes from './routes/cuentasPorPagar.route.js';
 import inventarioRoutes from './routes/inventario.route.js';
 import costosRoutes from './routes/costos.route.js';
+import clientesRoutes from './routes/clientes.routes.js';
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use('/api/contabilidad', cuentasContablesRoutes);
 app.use('/api/cuentas-pagar', cuentasPorPagarRoutes);
 app.use('/api/inventario', inventarioRoutes);
 app.use('/api/costos', costosRoutes);
+app.use('/api/clientes', clientesRoutes);
 
 import expressListEndpoints from 'express-list-endpoints';
 

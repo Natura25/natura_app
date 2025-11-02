@@ -1,12 +1,14 @@
-import VentaModel from '../models/venta.model.js';
+// backend/controllers/ventasController.js
 
-// ============= CONTROLADOR DE VENTAS MVC =============
+import VentaModel from '../models/venta.model.js';
 
 /**
  * Obtener todas las ventas con filtros opcionales
  */
 export const getVentas = async (req, res) => {
   try {
+    console.log('📋 Obteniendo ventas con filtros:', req.query);
+
     const filtros = {
       fecha_inicio: req.query.fecha_inicio,
       fecha_fin: req.query.fecha_fin,
@@ -16,9 +18,11 @@ export const getVentas = async (req, res) => {
     };
 
     const ventas = await VentaModel.findAll(filtros);
+
+    res.set('X-Total-Count', ventas.length);
     res.json(ventas);
   } catch (error) {
-    console.error('💥 Error al obtener ventas:', error);
+    console.error('❌ Error al obtener ventas:', error);
     res.status(500).json({
       error: 'Error al obtener las ventas',
       details: error.message,
@@ -32,6 +36,7 @@ export const getVentas = async (req, res) => {
 export const getVentaById = async (req, res) => {
   try {
     const { id } = req.params;
+    console.log('🔍 Buscando venta:', id);
 
     const venta = await VentaModel.findById(id);
 
@@ -41,7 +46,7 @@ export const getVentaById = async (req, res) => {
 
     res.json(venta);
   } catch (error) {
-    console.error('Error al obtener venta por ID:', error);
+    console.error('❌ Error al obtener venta por ID:', error);
     res.status(500).json({
       error: 'Error al obtener la venta',
       details: error.message,
@@ -54,23 +59,24 @@ export const getVentaById = async (req, res) => {
  */
 export const createVenta = async (req, res) => {
   try {
+    console.log('➕ Creando venta:', req.body);
+
     const ventaData = {
       cliente_id: req.body.cliente_id,
       monto: req.body.monto,
-      usuario_id: req.body.usuario_id,
+      usuario_id: req.user.id, // Desde el middleware de auth
       descripcion: req.body.descripcion,
       fecha_venta: req.body.fecha_venta,
       tipo: req.body.tipo || 'manual',
       comprobante_fiscal: req.body.comprobante_fiscal || false,
       forma_pago: req.body.forma_pago || 'contado',
       cuenta_contable_id: req.body.cuenta_contable_id,
-      // Campos ERP opcionales
       descuento: req.body.descuento || 0,
       itbis: req.body.itbis || 0,
       items: req.body.items || [],
     };
 
-    // Validar datos usando el modelo
+    // Validar datos
     const errores = VentaModel.validarDatosVenta(ventaData);
     if (errores.length > 0) {
       return res.status(400).json({
@@ -85,19 +91,19 @@ export const createVenta = async (req, res) => {
       return res.status(404).json({ error: 'Cliente no encontrado' });
     }
 
-    // Crear la venta usando el modelo
+    // Crear la venta
     const resultado = await VentaModel.create(ventaData);
 
     console.log(
-      `📝 Venta creada: ID ${resultado.venta_id}, Forma: ${resultado.forma_pago}, Monto: $${resultado.monto_total}`
+      `✅ Venta creada: ID ${resultado.venta_id}, Forma: ${resultado.forma_pago}, Monto: $${resultado.monto_total}`
     );
 
     res.status(201).json({
-      message: `Venta ${resultado.forma_pago} registrada con movimientos contables`,
+      message: `Venta ${resultado.forma_pago} registrada exitosamente`,
       ...resultado,
     });
   } catch (error) {
-    console.error('💥 Error al crear venta:', error);
+    console.error('❌ Error al crear venta:', error);
     res.status(500).json({
       error: 'Error al registrar la venta',
       details: error.message,
@@ -111,10 +117,11 @@ export const createVenta = async (req, res) => {
 export const updateVenta = async (req, res) => {
   try {
     const { id } = req.params;
+    console.log('✏️ Actualizando venta:', id);
+
     const datosActualizacion = {
       cliente_id: req.body.cliente_id,
       monto: req.body.monto,
-      usuario_id: req.body.usuario_id,
       descripcion: req.body.descripcion,
       fecha_venta: req.body.fecha_venta,
       tipo: req.body.tipo,
@@ -144,7 +151,7 @@ export const updateVenta = async (req, res) => {
       venta: ventaActualizada,
     });
   } catch (error) {
-    console.error('Error al actualizar venta:', error);
+    console.error('❌ Error al actualizar venta:', error);
     res.status(500).json({
       error: 'Error al actualizar venta',
       details: error.message,
@@ -158,6 +165,7 @@ export const updateVenta = async (req, res) => {
 export const deleteVenta = async (req, res) => {
   try {
     const { id } = req.params;
+    console.log('🗑️ Eliminando venta:', id);
 
     const ventaEliminada = await VentaModel.delete(id);
 
@@ -166,7 +174,7 @@ export const deleteVenta = async (req, res) => {
       venta_eliminada: ventaEliminada,
     });
   } catch (error) {
-    console.error('Error al eliminar venta:', error);
+    console.error('❌ Error al eliminar venta:', error);
 
     if (error.message === 'Venta no encontrada') {
       return res.status(404).json({ error: error.message });
@@ -180,16 +188,19 @@ export const deleteVenta = async (req, res) => {
 };
 
 /**
- * Anular una venta (más profesional que eliminar)
+ * Anular una venta (recomendado sobre eliminar)
  */
 export const anularVenta = async (req, res) => {
   try {
     const { id } = req.params;
-    const { motivo_anulacion, usuario_id } = req.body;
+    const { motivo_anulacion } = req.body;
+    const usuario_id = req.user.id;
 
-    if (!motivo_anulacion || !usuario_id) {
+    console.log('❌ Anulando venta:', id, 'Motivo:', motivo_anulacion);
+
+    if (!motivo_anulacion) {
       return res.status(400).json({
-        error: 'Se requieren motivo_anulacion y usuario_id',
+        error: 'Se requiere motivo_anulacion',
       });
     }
 
@@ -204,7 +215,7 @@ export const anularVenta = async (req, res) => {
       venta: ventaAnulada,
     });
   } catch (error) {
-    console.error('Error al anular venta:', error);
+    console.error('❌ Error al anular venta:', error);
 
     if (error.message === 'Venta no encontrada') {
       return res.status(404).json({ error: error.message });
@@ -222,6 +233,8 @@ export const anularVenta = async (req, res) => {
  */
 export const getReporteVentas = async (req, res) => {
   try {
+    console.log('📊 Generando reporte de ventas:', req.query);
+
     const filtros = {
       fecha_inicio: req.query.fecha_inicio,
       fecha_fin: req.query.fecha_fin,
@@ -237,12 +250,10 @@ export const getReporteVentas = async (req, res) => {
       filtros_aplicados: filtros,
     });
   } catch (error) {
-    console.error('Error al generar reporte de ventas:', error);
+    console.error('❌ Error al generar reporte de ventas:', error);
     res.status(500).json({
       error: 'Error al generar reporte de ventas',
       details: error.message,
     });
   }
 };
-
-// ============
