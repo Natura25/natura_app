@@ -1,6 +1,6 @@
 // routes/clientes.routes.js - COMPLETO (ES modules)
 import express from 'express';
-import ClientesController from '../controllers/clientesController.js';
+import ClientesController from '../controllers/clientes.controller.js';
 import { verificarToken } from '../middlewares/auth.js';
 
 const router = express.Router();
