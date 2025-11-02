@@ -1,4 +1,4 @@
-// backend/models/venta.model.js - VERSIÓN CORREGIDA
+// backend/models/venta.model.js - VERSIÓN COMPLETAMENTE CORREGIDA
 
 import { supabase } from '../config/supabase.js';
 import inventarioModel from './inventario.model.js';
@@ -24,29 +24,23 @@ export default {
    */
   async findAll(filtros = {}) {
     try {
-      const {
-        fecha_inicio,
-        fecha_fin,
-        forma_pago,
-        cliente_id,
-        estado = 'activa',
-      } = filtros;
+      const { fecha_inicio, fecha_fin, forma_pago, cliente_id } = filtros;
 
       let query = supabase
         .from('ventas')
         .select(
           `
-        *,
-        cliente:clientes(id, nombre, telefono, email),
-        usuario:usuarios!fk_ventas_auth_id(auth_id, username, email),
-        items:venta_items(
-          id,
-          cantidad,
-          precio_unitario,
-          subtotal,
-          producto:inventario(id, codigo, nombre, precio_venta)
-        )
-      `
+          *,
+          cliente:clientes(id, nombre, telefono, email),
+          usuario:usuarios!fk_ventas_auth_id(auth_id, username, email),
+          items:venta_items(
+            id,
+            cantidad,
+            precio_unitario,
+            subtotal,
+            producto:inventario(id, codigo, nombre, precio_venta)
+          )
+        `
         )
         .order('fecha_venta', { ascending: false });
 
@@ -63,10 +57,6 @@ export default {
 
       if (cliente_id) {
         query = query.eq('cliente_id', cliente_id);
-      }
-
-      if (estado) {
-        query = query.eq('estado', estado);
       }
 
       const { data, error } = await query;
@@ -96,6 +86,13 @@ export default {
    */
   async findById(id) {
     try {
+      // Validar que el ID sea un número
+      const ventaId = parseInt(id);
+      if (isNaN(ventaId)) {
+        console.error('❌ ID inválido:', id);
+        return null;
+      }
+
       const { data, error } = await supabase
         .from('ventas')
         .select(
@@ -113,7 +110,7 @@ export default {
           cuenta_contable:cuentas_contables(id, codigo, nombre)
         `
         )
-        .eq('id', id)
+        .eq('id', ventaId)
         .single();
 
       if (error) {
@@ -123,7 +120,7 @@ export default {
 
       // Obtener saldo pendiente si es crédito
       if (data.forma_pago === 'credito') {
-        data.saldo_pendiente = await this._obtenerSaldoPendiente(id);
+        data.saldo_pendiente = await this._obtenerSaldoPendiente(ventaId);
       } else {
         data.saldo_pendiente = 0;
       }
@@ -195,7 +192,6 @@ export default {
             comprobante_fiscal,
             forma_pago,
             cuenta_contable_id: cuenta_contable_id || null,
-            estado: 'activa',
             creado_por: usuario_id,
           },
         ])
@@ -381,11 +377,10 @@ export default {
         }
       }
 
-      // Anular la venta
+      // Anular la venta (solo actualizar descripción)
       const { data, error } = await supabase
         .from('ventas')
         .update({
-          estado: 'anulada',
           descripcion: `${
             venta.descripcion || ''
           } [ANULADA: ${motivo_anulacion}]`,
@@ -430,7 +425,7 @@ export default {
         agrupado_por = 'dia',
       } = filtros;
 
-      let query = supabase.from('ventas').select('*').eq('estado', 'activa');
+      let query = supabase.from('ventas').select('*');
 
       if (fecha_inicio && fecha_fin) {
         query = query

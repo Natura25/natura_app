@@ -1,4 +1,4 @@
-// backend/controllers/ventasController.js
+// backend/controllers/ventasController.js - VERSIÓN CORREGIDA
 
 import VentaModel from '../models/venta.model.js';
 
@@ -14,7 +14,7 @@ export const getVentas = async (req, res) => {
       fecha_fin: req.query.fecha_fin,
       forma_pago: req.query.forma_pago,
       cliente_id: req.query.cliente_id,
-      estado: req.query.estado || 'activa',
+      // ❌ ELIMINADO: estado: req.query.estado || 'activa',
     };
 
     const ventas = await VentaModel.findAll(filtros);
