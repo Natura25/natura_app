@@ -1,8 +1,9 @@
-// routes/clientes.routes.js - COMPLETO
-const express = require('express');
+// routes/clientes.routes.js - COMPLETO (ES modules)
+import express from 'express';
+import ClientesController from '../controllers/clientesController.js';
+import { verificarToken } from '../middlewares/auth.js';
+
 const router = express.Router();
-const ClientesController = require('../controllers/clientesController');
-import { verificarToken } from '../middlewares/auth.js'; // Usa el middleware correcto
 
 // ============= PROTEGER TODAS LAS RUTAS =============
 
@@ -39,4 +40,4 @@ router.put('/:id', ClientesController.actualizar);
 // DELETE /api/clientes/:id - Eliminar cliente (soft delete)
 router.delete('/:id', ClientesController.eliminar);
 
-module.exports = router;
+export default router;

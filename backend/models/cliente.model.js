@@ -1,5 +1,5 @@
 // models/cliente.model.js - CON SUPABASE
-const supabase = require('../config/supabase');
+import { supabase } from '../config/supabaseClient.js';
 
 class Cliente {
   // ============= OBTENER TODOS =============

@@ -1,5 +1,5 @@
 // controllers/clientesController.js - COMPLETO CON SUPABASE
-const Cliente = require('../models/cliente.model');
+import cliente from '../models/cliente.model.js';
 
 class ClientesController {
   // ============= OBTENER TODOS =============
