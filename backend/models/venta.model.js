@@ -38,7 +38,7 @@ export default {
           `
           *,
           cliente:clientes(id, nombre, telefono, email),
-          usuario:usuarios!fk_ventas_creado_por(id, nombre, email),
+          usuario:usuarios!fk_ventas_auth_id(auth_id, nombre, email),
           items:venta_items(
             id,
             cantidad,
@@ -102,7 +102,7 @@ export default {
           `
           *,
           cliente:clientes(id, nombre, telefono, email, direccion),
-          usuario:usuarios!fk_ventas_creado_por(id, nombre, email),
+          usuario:usuarios!fk_ventas_auth_id(auth_id, nombre, email),
           items:venta_items(
             id,
             cantidad,
