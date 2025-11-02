@@ -1,5 +1,5 @@
 // models/cliente.model.js - CON SUPABASE
-import { supabase } from '../config/supabaseClient.js';
+import { supabase } from '../config/supabase.js';
 
 class Cliente {
   // ============= OBTENER TODOS =============
