@@ -1,366 +1,229 @@
-// models/cliente.model.js
+// models/inventario.model.js
 import { supabase } from '../config/supabase.js';
 
 export default {
-  // ============= OBTENER TODOS =============
-  async obtenerTodos(filtros = {}) {
+  async listarProductos(filtros = {}) {
     try {
-      console.log('📋 Obteniendo clientes desde Supabase...');
-
       let query = supabase
-        .from('clientes')
+        .from('inventario')
         .select(
           `
           *,
-          ventas:ventas(count),
-          cuentas:cuentas_por_cobrar(monto_pendiente)
-        `
+          categoria:cuentas_contables!categoria_id(id, codigo, nombre, tipo),
+          proveedor:proveedores(id, nombre),
+          creador:usuarios!creado_por(username),
+          actualizador:usuarios!actualizado_por(username)
+        `,
+          { count: 'exact' }
         )
-        .eq('activo', true);
-
-      if (filtros.tipo_cliente) {
-        query = query.eq('tipo_cliente', filtros.tipo_cliente);
-      }
-      if (filtros.ciudad) {
-        query = query.eq('ciudad', filtros.ciudad);
-      }
-      if (filtros.provincia) {
-        query = query.eq('provincia', filtros.provincia);
-      }
-
-      query = query.order('nombre', { ascending: true });
-
-      const { data, error } = await query;
-      if (error) throw error;
-
-      const clientesConCalculos = data.map((cliente) => ({
-        ...cliente,
-        total_ventas: cliente.ventas?.[0]?.count || 0,
-        saldo_pendiente:
-          cliente.cuentas?.reduce(
-            (sum, c) => sum + (parseFloat(c.monto_pendiente) || 0),
-            0
-          ) || 0,
-      }));
-
-      console.log(`✅ ${clientesConCalculos.length} clientes obtenidos`);
-      return clientesConCalculos;
-    } catch (error) {
-      console.error('❌ Error en obtenerTodos:', error);
-      throw error;
-    }
-  },
-
-  // ============= OBTENER POR ID =============
-  async obtenerPorId(id) {
-    try {
-      console.log(`🔍 Obteniendo cliente ID: ${id}`);
-
-      const { data, error } = await supabase
-        .from('clientes')
-        .select(
-          `
-          *,
-          ventas:ventas(id, monto, fecha_venta, estado),
-          cuentas:cuentas_por_cobrar(id, monto_pendiente, fecha_vencimiento, estado)
-        `
-        )
-        .eq('id', id)
         .eq('activo', true)
-        .single();
+        .order('creado_en', { ascending: false });
 
-      if (error?.code === 'PGRST116') return null;
-      if (error) throw error;
-
-      const ventasActivas =
-        data.ventas?.filter((v) => v.estado === 'activa') || [];
-      const cuentasPendientes =
-        data.cuentas?.filter((c) => c.estado === 'pendiente') || [];
-
-      return {
-        ...data,
-        total_ventas: ventasActivas.length,
-        monto_total_ventas: ventasActivas.reduce(
-          (sum, v) => sum + (parseFloat(v.monto) || 0),
-          0
-        ),
-        saldo_pendiente: cuentasPendientes.reduce(
-          (sum, c) => sum + (parseFloat(c.monto_pendiente) || 0),
-          0
-        ),
-        credito_disponible:
-          (parseFloat(data.limite_credito) || 0) -
-          cuentasPendientes.reduce(
-            (sum, c) => sum + (parseFloat(c.monto_pendiente) || 0),
-            0
-          ),
-      };
-    } catch (error) {
-      console.error('❌ Error en obtenerPorId:', error);
-      throw error;
-    }
-  },
-
-  // ============= BUSCAR =============
-  async buscar(criterios) {
-    try {
-      console.log('🔎 Buscando clientes...', criterios);
-
-      let query = supabase
-        .from('clientes')
-        .select('*, cuentas:cuentas_por_cobrar(monto_pendiente)')
-        .eq('activo', true);
-
-      if (criterios.cedula) {
-        query = query.ilike('cedula', `%${criterios.cedula}%`);
-      }
-      if (criterios.rnc) {
-        query = query.ilike('rnc', `%${criterios.rnc}%`);
-      }
-      if (criterios.nombre) {
+      // Filtros
+      if (filtros.busqueda) {
         query = query.or(
-          `nombre.ilike.%${criterios.nombre}%,nombre_comercial.ilike.%${criterios.nombre}%`
+          `nombre.ilike.%${filtros.busqueda}%,codigo.ilike.%${filtros.busqueda}%`
         );
       }
-      if (criterios.telefono) {
-        query = query.ilike('telefono', `%${criterios.telefono}%`);
-      }
-      if (criterios.email) {
-        query = query.ilike('email', `%${criterios.email}%`);
-      }
-      if (criterios.tipo_cliente) {
-        query = query.eq('tipo_cliente', criterios.tipo_cliente);
-      }
-      if (criterios.ciudad) {
-        query = query.eq('ciudad', criterios.ciudad);
+
+      if (filtros.categoria_id) {
+        query = query.eq('categoria_id', filtros.categoria_id);
       }
 
-      query = query.order('nombre', { ascending: true }).limit(50);
+      if (filtros.proveedor_id) {
+        query = query.eq('proveedor_id', filtros.proveedor_id);
+      }
 
-      const { data, error } = await query;
+      // Paginación
+      const page = parseInt(filtros.page) || 1;
+      const limit = parseInt(filtros.limit) || 50;
+      const offset = (page - 1) * limit;
+
+      query = query.range(offset, offset + limit - 1);
+
+      const { data, error, count } = await query;
+
       if (error) throw error;
 
-      return data.map((cliente) => ({
-        ...cliente,
-        saldo_pendiente:
-          cliente.cuentas?.reduce(
-            (sum, c) => sum + (parseFloat(c.monto_pendiente) || 0),
-            0
-          ) || 0,
-      }));
+      return { data, count };
     } catch (error) {
-      console.error('❌ Error en buscar:', error);
+      console.error('❌ Error listando productos:', error);
       throw error;
     }
   },
 
-  // ============= CREAR =============
-  async crear(clienteData) {
+  async obtenerProductoPorId(id) {
     try {
-      console.log('➕ Creando cliente:', clienteData.nombre);
-
-      const camposDuplicados = ['cedula', 'rnc', 'email'];
-      for (const campo of camposDuplicados) {
-        if (clienteData[campo]) {
-          const { data: existente } = await supabase
-            .from('clientes')
-            .select('id')
-            .eq(campo, clienteData[campo])
-            .eq('activo', true)
-            .single();
-
-          if (existente) {
-            throw new Error(`Ya existe un cliente con ese ${campo}`);
-          }
-        }
-      }
-
       const { data, error } = await supabase
-        .from('clientes')
-        .insert([{ ...clienteData, activo: true }])
-        .select()
-        .single();
-
-      if (error) throw error;
-      console.log(`✅ Cliente creado con ID: ${data.id}`);
-      return data;
-    } catch (error) {
-      console.error('❌ Error en crear:', error);
-      throw error;
-    }
-  },
-
-  // ============= ACTUALIZAR =============
-  async actualizar(id, clienteData) {
-    try {
-      console.log(`✏️ Actualizando cliente ID: ${id}`);
-
-      const clienteExiste = await this.obtenerPorId(id);
-      if (!clienteExiste) {
-        throw new Error('Cliente no encontrado');
-      }
-
-      const { data, error } = await supabase
-        .from('clientes')
-        .update(clienteData)
+        .from('inventario')
+        .select(
+          `
+          *,
+          categoria:cuentas_contables!categoria_id(id, codigo, nombre, tipo),
+          proveedor:proveedores(id, nombre, contacto, telefono),
+          creador:usuarios!creado_por(username, email),
+          actualizador:usuarios!actualizado_por(username, email)
+        `
+        )
         .eq('id', id)
-        .select()
         .single();
 
       if (error) throw error;
-      console.log(`✅ Cliente actualizado: ${data.nombre}`);
       return data;
     } catch (error) {
-      console.error('❌ Error en actualizar:', error);
+      console.error('❌ Error obteniendo producto:', error);
       throw error;
     }
   },
 
-  // ============= ELIMINAR =============
-  async eliminar(id) {
+  async crearProducto(datos) {
     try {
-      console.log(`🗑️ Desactivando cliente ID: ${id}`);
+      const { data, error } = await supabase
+        .from('inventario')
+        .insert([
+          {
+            codigo: datos.codigo,
+            nombre: datos.nombre,
+            descripcion: datos.descripcion || null,
+            categoria_id: datos.categoria_id || null,
+            unidad_medida: datos.unidad_medida || 'unidad',
+            cantidad: datos.cantidad || 0,
+            min_stock: datos.min_stock || 0,
+            precio_compra: datos.precio_compra || 0,
+            precio_venta: datos.precio_venta || 0,
+            proveedor_id: datos.proveedor_id || null,
+            ubicacion: datos.ubicacion || null,
+            notas: datos.notas || null,
+            activo: true,
+            creado_por: datos.creado_por,
+            actualizado_por: datos.actualizado_por,
+          },
+        ])
+        .select(
+          `
+          *,
+          categoria:cuentas_contables!categoria_id(id, codigo, nombre, tipo),
+          proveedor:proveedores(id, nombre)
+        `
+        )
+        .single();
 
-      const { count: ventasCount } = await supabase
-        .from('ventas')
-        .select('*', { count: 'exact', head: true })
-        .eq('cliente_id', id);
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('❌ Error creando producto:', error);
+      throw error;
+    }
+  },
 
-      if (ventasCount > 0) {
-        throw new Error(
-          'No se puede eliminar un cliente con ventas registradas.'
-        );
-      }
+  async actualizarProducto(id, datos) {
+    try {
+      const updateData = {
+        actualizado_por: datos.actualizado_por,
+        actualizado_en: new Date(),
+      };
 
-      const { count: cuentasCount } = await supabase
-        .from('cuentas_por_cobrar')
-        .select('*', { count: 'exact', head: true })
-        .eq('cliente_id', id)
-        .eq('estado', 'pendiente');
+      // Solo actualizar campos que vengan en datos
+      if (datos.codigo !== undefined) updateData.codigo = datos.codigo;
+      if (datos.nombre !== undefined) updateData.nombre = datos.nombre;
+      if (datos.descripcion !== undefined)
+        updateData.descripcion = datos.descripcion;
+      if (datos.categoria_id !== undefined)
+        updateData.categoria_id = datos.categoria_id;
+      if (datos.unidad_medida !== undefined)
+        updateData.unidad_medida = datos.unidad_medida;
+      if (datos.cantidad !== undefined) updateData.cantidad = datos.cantidad;
+      if (datos.min_stock !== undefined) updateData.min_stock = datos.min_stock;
+      if (datos.precio_compra !== undefined)
+        updateData.precio_compra = datos.precio_compra;
+      if (datos.precio_venta !== undefined)
+        updateData.precio_venta = datos.precio_venta;
+      if (datos.proveedor_id !== undefined)
+        updateData.proveedor_id = datos.proveedor_id;
+      if (datos.ubicacion !== undefined) updateData.ubicacion = datos.ubicacion;
+      if (datos.notas !== undefined) updateData.notas = datos.notas;
 
-      if (cuentasCount > 0) {
-        throw new Error(
-          'No se puede eliminar un cliente con cuentas pendientes'
-        );
-      }
+      const { data, error } = await supabase
+        .from('inventario')
+        .update(updateData)
+        .eq('id', id)
+        .select(
+          `
+          *,
+          categoria:cuentas_contables!categoria_id(id, codigo, nombre, tipo),
+          proveedor:proveedores(id, nombre)
+        `
+        )
+        .single();
 
-      const { error } = await supabase
-        .from('clientes')
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('❌ Error actualizando producto:', error);
+      throw error;
+    }
+  },
+
+  async eliminarProducto(id) {
+    try {
+      // Soft delete
+      const { data, error } = await supabase
+        .from('inventario')
         .update({ activo: false })
         .eq('id', id);
 
       if (error) throw error;
-
-      console.log('✅ Cliente desactivado correctamente');
-      return { mensaje: 'Cliente desactivado correctamente' };
+      return data;
     } catch (error) {
-      console.error('❌ Error en eliminar:', error);
+      console.error('❌ Error eliminando producto:', error);
       throw error;
     }
   },
 
-  // ============= ESTADÍSTICAS =============
-  async obtenerEstadisticas() {
+  async actualizarStock(productoId, cantidad, tipo) {
     try {
+      const { data: producto, error: fetchError } = await supabase
+        .from('inventario')
+        .select('cantidad')
+        .eq('id', productoId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const nuevaCantidad = producto.cantidad + cantidad;
+
+      if (nuevaCantidad < 0) {
+        throw new Error('Stock insuficiente');
+      }
+
       const { data, error } = await supabase
-        .from('clientes')
-        .select('tipo_cliente, es_empresa, limite_credito')
-        .eq('activo', true);
-
-      if (error) throw error;
-
-      const stats = {
-        total_clientes: data.length,
-        minoristas: data.filter((c) => c.tipo_cliente === 'minorista').length,
-        mayoristas: data.filter((c) => c.tipo_cliente === 'mayorista').length,
-        distribuidores: data.filter((c) => c.tipo_cliente === 'distribuidor')
-          .length,
-        corporativos: data.filter((c) => c.tipo_cliente === 'corporativo')
-          .length,
-        empresas: data.filter((c) => c.es_empresa).length,
-        promedio_limite_credito:
-          data.reduce(
-            (sum, c) => sum + (parseFloat(c.limite_credito) || 0),
-            0
-          ) / data.length,
-      };
-
-      return stats;
-    } catch (error) {
-      console.error('❌ Error en obtenerEstadisticas:', error);
-      throw error;
-    }
-  },
-
-  // ============= TOP CLIENTES =============
-  async obtenerTopClientes(limite = 10) {
-    try {
-      const { data, error } = await supabase
-        .from('clientes')
-        .select('*, ventas:ventas(monto, estado)')
-        .eq('activo', true);
-
-      if (error) throw error;
-
-      return data
-        .map((cliente) => {
-          const ventasActivas =
-            cliente.ventas?.filter((v) => v.estado === 'activa') || [];
-          return {
-            ...cliente,
-            total_compras: ventasActivas.length,
-            monto_total: ventasActivas.reduce(
-              (sum, v) => sum + (parseFloat(v.monto) || 0),
-              0
-            ),
-          };
+        .from('inventario')
+        .update({
+          cantidad: nuevaCantidad,
+          actualizado_en: new Date(),
         })
-        .filter((c) => c.total_compras > 0)
-        .sort((a, b) => b.monto_total - a.monto_total)
-        .slice(0, limite);
+        .eq('id', productoId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
     } catch (error) {
-      console.error('❌ Error en obtenerTopClientes:', error);
+      console.error('❌ Error actualizando stock:', error);
       throw error;
     }
   },
 
-  // ============= CLIENTES CON DEUDA =============
-  async obtenerClientesConDeuda() {
+  async obtenerProductosStockBajo() {
     try {
-      const { data, error } = await supabase
-        .from('clientes')
-        .select(
-          '*, cuentas:cuentas_por_cobrar(monto_pendiente, fecha_vencimiento, estado)'
-        )
-        .eq('activo', true);
+      const { data, error } = await supabase.rpc(
+        'obtener_productos_stock_bajo'
+      );
 
       if (error) throw error;
-
-      return data
-        .map((cliente) => {
-          const cuentasPendientes =
-            cliente.cuentas?.filter((c) => c.estado === 'pendiente') || [];
-          return {
-            ...cliente,
-            total_deuda: cuentasPendientes.reduce(
-              (sum, c) => sum + (parseFloat(c.monto_pendiente) || 0),
-              0
-            ),
-            facturas_pendientes: cuentasPendientes.length,
-            deuda_mas_antigua:
-              cuentasPendientes.length > 0
-                ? cuentasPendientes.sort(
-                    (a, b) =>
-                      new Date(a.fecha_vencimiento) -
-                      new Date(b.fecha_vencimiento)
-                  )[0].fecha_vencimiento
-                : null,
-          };
-        })
-        .filter((c) => c.total_deuda > 0)
-        .sort((a, b) => b.total_deuda - a.total_deuda);
+      return data;
     } catch (error) {
-      console.error('❌ Error en obtenerClientesConDeuda:', error);
+      console.error('❌ Error obteniendo productos con stock bajo:', error);
       throw error;
     }
   },
