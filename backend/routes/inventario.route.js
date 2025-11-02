@@ -1,56 +1,62 @@
-// backend/routes/ventas.routes.js
+import express from 'express';
+import { verificarToken } from '../middlewares/auth.js';
+import inventarioController from '../controllers/inventarioController.js';
 
-import { Router } from 'express';
-import {
-  getVentas,
-  getVentaById,
-  createVenta,
-  updateVenta,
-  deleteVenta,
-  anularVenta,
-  getReporteVentas,
-} from '../controllers/ventasController.js';
-import { verificarToken } from '../middlewares/auth.js'; // Usa el middleware correcto
+const router = express.Router();
 
-const router = Router();
-
-// Proteger todas las rutas de ventas
+//! Todas las rutas requieren autenticación
 router.use(verificarToken);
 
-// ============= RUTAS DE CONSULTA =============
+//! ====================================
+//! RUTAS DE PRODUCTOS
+//! ====================================
 
-// Obtener todas las ventas con filtros opcionales
-// GET /api/ventas?fecha_inicio=2024-01-01&fecha_fin=2024-12-31&forma_pago=contado&cliente_id=123&estado=activa
-router.get('/', getVentas);
+// Obtener todos los productos (con paginación y filtros opcionales)
+router.get('/productos', inventarioController.obtenerProductos);
 
-// Generar reportes de ventas (ANTES de /:id para evitar conflicto)
-// GET /api/ventas/reportes?fecha_inicio=2024-01-01&fecha_fin=2024-12-31&forma_pago=contado&agrupado_por=dia
-router.get('/reportes', getReporteVentas);
+// Obtener un producto específico por ID
+router.get('/productos/:id', inventarioController.obtenerProductoPorId);
 
-// Obtener una venta específica por ID
-// GET /api/ventas/123
-router.get('/:id', getVentaById);
+// Crear nuevo producto
+router.post('/productos', inventarioController.crearProducto);
 
-// ============= RUTAS DE CREACIÓN =============
+// Actualizar producto
+router.put('/productos/:id', inventarioController.actualizarProducto);
 
-// Crear nueva venta (manual o directa)
-// POST /api/ventas
-router.post('/', createVenta);
+// Eliminar producto
+router.delete('/productos/:id', inventarioController.eliminarProducto);
 
-// ============= RUTAS DE ACTUALIZACIÓN =============
+//! ====================================
+//! RUTAS DE MOVIMIENTOS
+//! ====================================
 
-// Actualizar una venta existente
-// PUT /api/ventas/123
-router.put('/:id', updateVenta);
+// Obtener todos los movimientos
+router.get('/movimientos', inventarioController.obtenerMovimientos);
 
-// Anular una venta (recomendado sobre eliminar)
-// PATCH /api/ventas/123/anular
-router.patch('/:id/anular', anularVenta);
+// Registrar entrada de inventario
+router.post('/movimientos/entrada', inventarioController.registrarEntrada);
 
-// ============= RUTAS DE ELIMINACIÓN =============
+// Registrar salida de inventario
+router.post('/movimientos/salida', inventarioController.registrarSalida);
 
-// Eliminar una venta completamente (usar con precaución)
-// DELETE /api/ventas/123
-router.delete('/:id', deleteVenta);
+// Registrar ajuste de inventario
+router.post('/movimientos/ajuste', inventarioController.registrarAjuste);
+
+//! ====================================
+//! RUTAS DE REPORTES
+//! ====================================
+
+// Generar reporte de inventario (PDF o Excel)
+router.get('/reportes/inventario', inventarioController.reporteInventario);
+
+// Generar reporte de movimientos (PDF o Excel)
+router.get('/reportes/movimientos', inventarioController.reporteMovimientos);
+
+//! ====================================
+//! RUTAS DE ALERTAS
+//! ====================================
+
+// Obtener productos con stock bajo
+router.get('/alertas/stock-bajo', inventarioController.obtenerAlertasStock);
 
 export default router;
