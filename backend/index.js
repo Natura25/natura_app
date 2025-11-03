@@ -21,6 +21,7 @@ app.use(
       'http://localhost:5173',
       'http://localhost:3000',
       'https://localhost:5173',
+      'https://natura-app.onrender.com',
     ],
     // credentials: true, ← YA NO NECESITAS ESTO
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
