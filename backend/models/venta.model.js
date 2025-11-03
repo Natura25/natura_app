@@ -1,4 +1,4 @@
-// backend/models/venta.model.js - VERSIÓN COMPLETAMENTE CORREGIDA
+// backend/models/venta.model.js - VERSIÓN FINAL CORREGIDA
 
 import { supabase } from '../config/supabase.js';
 import inventarioModel from './inventario.model.js';
@@ -24,6 +24,8 @@ export default {
    */
   async findAll(filtros = {}) {
     try {
+      console.log('📋 Obteniendo ventas con filtros:', filtros);
+
       const { fecha_inicio, fecha_fin, forma_pago, cliente_id } = filtros;
 
       let query = supabase
@@ -32,7 +34,7 @@ export default {
           `
           *,
           cliente:clientes(id, nombre, telefono, email),
-          usuario:usuarios!fk_ventas_auth_id(auth_id, username, email),
+          usuario:usuarios(auth_id, username, email),
           items:venta_items(
             id,
             cantidad,
@@ -61,7 +63,12 @@ export default {
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error obteniendo ventas:', error);
+        throw error;
+      }
+
+      console.log(`✅ ${data?.length || 0} ventas obtenidas`);
 
       // Calcular saldo pendiente para ventas a crédito
       const ventasConSaldo = await Promise.all(
@@ -86,7 +93,6 @@ export default {
    */
   async findById(id) {
     try {
-      // Validar que el ID sea un número
       const ventaId = parseInt(id);
       if (isNaN(ventaId)) {
         console.error('❌ ID inválido:', id);
@@ -99,7 +105,7 @@ export default {
           `
           *,
           cliente:clientes(id, nombre, telefono, email, direccion),
-          usuario:usuarios!fk_ventas_auth_id(auth_id, username, email),
+          usuario:usuarios(auth_id, username, email),
           items:venta_items(
             id,
             cantidad,
@@ -160,7 +166,7 @@ export default {
     const {
       cliente_id,
       monto,
-      usuario_id,
+      auth_id, // ✅ CAMBIADO de usuario_id a auth_id
       descripcion,
       fecha_venta,
       tipo = 'manual',
@@ -173,38 +179,63 @@ export default {
     } = ventaData;
 
     try {
+      console.log('➕ Creando venta:', {
+        cliente_id,
+        monto,
+        auth_id,
+        descripcion,
+        forma_pago,
+        descuento,
+        itbis,
+        items: items.length,
+      });
+
+      // Validar auth_id
+      if (!auth_id) {
+        throw new Error('auth_id es requerido');
+      }
+
       // Calcular montos
       const monto_neto = monto - descuento;
       const monto_total = monto_neto + itbis;
       const fechaVentaFinal = fecha_venta ? new Date(fecha_venta) : new Date();
 
       // 1. Crear la venta principal
+      const ventaInsert = {
+        cliente_id: parseInt(cliente_id),
+        monto: parseFloat(monto_total),
+        auth_id, // ✅ Usar auth_id en lugar de usuario_id
+        descripcion: descripcion || null,
+        fecha_venta: fechaVentaFinal.toISOString().split('T')[0],
+        tipo,
+        comprobante_fiscal,
+        forma_pago,
+        cuenta_contable_id: cuenta_contable_id || null,
+        descuento: parseFloat(descuento),
+        itbis: parseFloat(itbis),
+        monto_neto: parseFloat(monto_neto),
+        monto_total: parseFloat(monto_total),
+      };
+
+      console.log('📝 Insertando venta:', ventaInsert);
+
       const { data: venta, error: ventaError } = await supabase
         .from('ventas')
-        .insert([
-          {
-            cliente_id,
-            monto: parseFloat(monto_total),
-            usuario_id,
-            descripcion: descripcion || null,
-            fecha_venta: fechaVentaFinal.toISOString(),
-            tipo,
-            comprobante_fiscal,
-            forma_pago,
-            cuenta_contable_id: cuenta_contable_id || null,
-            creado_por: usuario_id,
-          },
-        ])
+        .insert([ventaInsert])
         .select()
         .single();
 
-      if (ventaError) throw ventaError;
+      if (ventaError) {
+        console.error('❌ Error insertando venta:', ventaError);
+        throw ventaError;
+      }
 
       const ventaId = venta.id;
+      console.log(`✅ Venta creada con ID: ${ventaId}`);
 
       // 2. Insertar items y actualizar inventario
       if (items && items.length > 0) {
-        await this._procesarItems(ventaId, items, usuario_id);
+        await this._procesarItems(ventaId, items, auth_id);
       }
 
       // 3. Procesar según forma de pago
@@ -215,14 +246,14 @@ export default {
           monto_total,
           cuenta_contable_id,
           descripcion,
-          usuario_id,
+          auth_id, // ✅ CAMBIADO
         });
       } else {
         await this._procesarVentaContado({
           ventaId,
           monto_total,
           descripcion,
-          usuario_id,
+          auth_id, // ✅ CAMBIADO
         });
       }
 
@@ -233,7 +264,7 @@ export default {
         monto: monto_sin_impuesto,
         forma_pago,
         descripcion,
-        usuario_id,
+        auth_id, // ✅ CAMBIADO
       });
 
       // 5. Registrar ITBIS si existe
@@ -242,12 +273,12 @@ export default {
           ventaId,
           itbis,
           descripcion,
-          usuario_id,
+          auth_id, // ✅ CAMBIADO
         });
       }
 
       console.log(
-        `✅ Venta creada: ID ${ventaId}, Forma: ${forma_pago}, Monto: $${monto_total}`
+        `✅ Venta completa: ID ${ventaId}, Forma: ${forma_pago}, Monto: $${monto_total}`
       );
 
       return {
@@ -264,34 +295,28 @@ export default {
 
   //! ============= MÉTODOS DE ACTUALIZACIÓN =============
 
-  /**
-   * Actualizar una venta existente
-   */
   async update(id, datosActualizacion) {
     try {
       const updateData = {
         actualizado_en: new Date().toISOString(),
       };
 
-      // Solo actualizar campos proporcionados
       if (datosActualizacion.cliente_id !== undefined)
-        updateData.cliente_id = datosActualizacion.cliente_id;
+        updateData.cliente_id = parseInt(datosActualizacion.cliente_id);
       if (datosActualizacion.monto !== undefined)
         updateData.monto = parseFloat(datosActualizacion.monto);
       if (datosActualizacion.descripcion !== undefined)
         updateData.descripcion = datosActualizacion.descripcion;
       if (datosActualizacion.fecha_venta !== undefined)
-        updateData.fecha_venta = new Date(
-          datosActualizacion.fecha_venta
-        ).toISOString();
+        updateData.fecha_venta = new Date(datosActualizacion.fecha_venta)
+          .toISOString()
+          .split('T')[0];
       if (datosActualizacion.tipo !== undefined)
         updateData.tipo = datosActualizacion.tipo;
       if (datosActualizacion.comprobante_fiscal !== undefined)
         updateData.comprobante_fiscal = datosActualizacion.comprobante_fiscal;
       if (datosActualizacion.forma_pago !== undefined)
         updateData.forma_pago = datosActualizacion.forma_pago;
-      if (datosActualizacion.cuenta_contable_id !== undefined)
-        updateData.cuenta_contable_id = datosActualizacion.cuenta_contable_id;
 
       const { data, error } = await supabase
         .from('ventas')
@@ -310,22 +335,18 @@ export default {
 
   //! ============= MÉTODOS DE ELIMINACIÓN =============
 
-  /**
-   * Eliminar una venta completamente
-   */
   async delete(id) {
     try {
-      // Primero obtener la venta para restaurar inventario
       const venta = await this.findById(id);
       if (!venta) throw new Error('Venta no encontrada');
 
-      // Restaurar inventario de los items
+      // Restaurar inventario
       if (venta.items && venta.items.length > 0) {
         for (const item of venta.items) {
           await inventarioModel.actualizarStock(
             item.producto.id,
-            item.cantidad, // Devolver al inventario
-            'ajuste_entrada'
+            item.cantidad,
+            'ajuste'
           );
         }
       }
@@ -357,12 +378,9 @@ export default {
     }
   },
 
-  /**
-   * Anular una venta (recomendado sobre eliminar)
-   */
-  async anular(id, motivo_anulacion, usuario_id) {
+  async anular(id, motivo_anulacion, auth_id) {
+    // ✅ CAMBIADO parámetro
     try {
-      // Obtener la venta
       const venta = await this.findById(id);
       if (!venta) throw new Error('Venta no encontrada');
 
@@ -372,12 +390,12 @@ export default {
           await inventarioModel.actualizarStock(
             item.producto.id,
             item.cantidad,
-            'ajuste_entrada'
+            'ajuste'
           );
         }
       }
 
-      // Anular la venta (solo actualizar descripción)
+      // Anular la venta
       const { data, error } = await supabase
         .from('ventas')
         .update({
@@ -401,7 +419,7 @@ export default {
       }
 
       // Registrar movimientos de anulación
-      await this._registrarMovimientosAnulacion(venta, usuario_id);
+      await this._registrarMovimientosAnulacion(venta, auth_id); // ✅ CAMBIADO
 
       console.log(`❌ Venta anulada: ID ${id}, Motivo: ${motivo_anulacion}`);
       return data;
@@ -413,9 +431,6 @@ export default {
 
   //! ============= MÉTODOS DE REPORTES =============
 
-  /**
-   * Generar reporte de ventas
-   */
   async generarReporte(filtros = {}) {
     try {
       const {
@@ -441,7 +456,6 @@ export default {
 
       if (error) throw error;
 
-      // Agrupar datos
       const reporte = this._agruparVentas(data, agrupado_por);
 
       return reporte;
@@ -453,34 +467,36 @@ export default {
 
   //! ============= MÉTODOS PRIVADOS =============
 
-  /**
-   * Procesar items de venta y actualizar inventario
-   */
-  async _procesarItems(ventaId, items, usuario_id) {
+  async _procesarItems(ventaId, items, auth_id) {
+    // ✅ CAMBIADO parámetro
     try {
       for (const item of items) {
-        // Insertar item de venta
-        const { error: itemError } = await supabase.from('venta_items').insert([
-          {
-            venta_id: ventaId,
-            producto_id: item.producto_id,
-            cantidad: item.cantidad,
-            precio_unitario: item.precio_unitario,
-            subtotal: item.subtotal,
-          },
-        ]);
+        const itemData = {
+          venta_id: ventaId,
+          producto_id: parseInt(item.producto_id),
+          cantidad: parseFloat(item.cantidad),
+          precio_unitario: parseFloat(item.precio_unitario),
+          subtotal: parseFloat(item.subtotal),
+        };
 
-        if (itemError) throw itemError;
+        const { error: itemError } = await supabase
+          .from('venta_items')
+          .insert([itemData]);
 
-        // Actualizar inventario (restar cantidad)
+        if (itemError) {
+          console.error('❌ Error insertando item:', itemError);
+          throw itemError;
+        }
+
+        // Actualizar inventario
         await inventarioModel.actualizarStock(
           item.producto_id,
-          -item.cantidad, // Negativo para restar
+          -item.cantidad,
           'salida'
         );
 
         console.log(
-          `📉 Inventario actualizado: Producto ${item.producto_id}, Cantidad: -${item.cantidad}`
+          `📉 Stock actualizado: Producto ${item.producto_id}, -${item.cantidad}`
         );
       }
     } catch (error) {
@@ -489,9 +505,6 @@ export default {
     }
   },
 
-  /**
-   * Obtener saldo pendiente de una venta a crédito
-   */
   async _obtenerSaldoPendiente(ventaId) {
     try {
       const { data, error } = await supabase
@@ -504,59 +517,52 @@ export default {
       if (error && error.code !== 'PGRST116') throw error;
       return data?.saldo_pendiente || 0;
     } catch (error) {
-      console.error('❌ Error obteniendo saldo pendiente:', error);
       return 0;
     }
   },
 
-  /**
-   * Procesar venta a crédito
-   */
   async _procesarVentaCredito(data) {
-    const { ventaId, cliente_id, monto_total, cuenta_contable_id, usuario_id } =
-      data;
+    const { ventaId, cliente_id, monto_total, cuenta_contable_id, auth_id } =
+      data; // ✅ CAMBIADO
 
     try {
-      // Insertar en cuentas por cobrar
       const { error } = await supabase.from('cuentas_por_cobrar').insert([
         {
-          cliente_id,
+          cliente_id: parseInt(cliente_id),
           venta_id: ventaId,
-          monto_total,
-          saldo_pendiente: monto_total,
-          fecha_emision: new Date().toISOString(),
-          fecha_vencimiento: new Date(
-            Date.now() + 30 * 24 * 60 * 60 * 1000
-          ).toISOString(),
+          monto_total: parseFloat(monto_total),
+          saldo_pendiente: parseFloat(monto_total),
+          monto_pagado: 0,
+          fecha_emision: new Date().toISOString().split('T')[0],
+          fecha_vencimiento: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split('T')[0],
           cuenta_contable_id: cuenta_contable_id || CUENTAS.CUENTAS_POR_COBRAR,
           estado: 'pendiente',
-          creado_por: usuario_id,
         },
       ]);
 
       if (error) throw error;
 
-      // Registrar movimiento contable
       await this._registrarMovimientoContable({
         cuenta_id: cuenta_contable_id || CUENTAS.CUENTAS_POR_COBRAR,
         origen_tabla: 'ventas',
         origen_id: ventaId,
         descripcion: `Venta a crédito #${ventaId}`,
-        debe: monto_total,
+        debe: parseFloat(monto_total),
         haber: 0,
-        creado_por: usuario_id,
+        creado_por: auth_id, // ✅ CAMBIADO
       });
+
+      console.log(`💳 Cuenta por cobrar creada para venta #${ventaId}`);
     } catch (error) {
       console.error('❌ Error procesando venta a crédito:', error);
       throw error;
     }
   },
 
-  /**
-   * Procesar venta al contado
-   */
   async _procesarVentaContado(data) {
-    const { ventaId, monto_total, usuario_id } = data;
+    const { ventaId, monto_total, auth_id } = data; // ✅ CAMBIADO
 
     try {
       await this._registrarMovimientoContable({
@@ -564,21 +570,20 @@ export default {
         origen_tabla: 'ventas',
         origen_id: ventaId,
         descripcion: `Venta al contado #${ventaId}`,
-        debe: monto_total,
+        debe: parseFloat(monto_total),
         haber: 0,
-        creado_por: usuario_id,
+        creado_por: auth_id, // ✅ CAMBIADO
       });
+
+      console.log(`💵 Registro de caja para venta #${ventaId}`);
     } catch (error) {
       console.error('❌ Error procesando venta al contado:', error);
       throw error;
     }
   },
 
-  /**
-   * Registrar ingreso por venta
-   */
   async _registrarIngresoVenta(data) {
-    const { ventaId, monto, usuario_id } = data;
+    const { ventaId, monto, auth_id } = data; // ✅ CAMBIADO
 
     try {
       await this._registrarMovimientoContable({
@@ -587,8 +592,8 @@ export default {
         origen_id: ventaId,
         descripcion: `Ingreso por venta #${ventaId}`,
         debe: 0,
-        haber: monto,
-        creado_por: usuario_id,
+        haber: parseFloat(monto),
+        creado_por: auth_id, // ✅ CAMBIADO
       });
     } catch (error) {
       console.error('❌ Error registrando ingreso:', error);
@@ -596,11 +601,8 @@ export default {
     }
   },
 
-  /**
-   * Registrar ITBIS por pagar
-   */
   async _registrarITBIS(data) {
-    const { ventaId, itbis, usuario_id } = data;
+    const { ventaId, itbis, auth_id } = data; // ✅ CAMBIADO
 
     try {
       await this._registrarMovimientoContable({
@@ -609,8 +611,8 @@ export default {
         origen_id: ventaId,
         descripcion: `ITBIS venta #${ventaId}`,
         debe: 0,
-        haber: itbis,
-        creado_por: usuario_id,
+        haber: parseFloat(itbis),
+        creado_por: auth_id, // ✅ CAMBIADO
       });
     } catch (error) {
       console.error('❌ Error registrando ITBIS:', error);
@@ -618,9 +620,6 @@ export default {
     }
   },
 
-  /**
-   * Registrar movimiento contable
-   */
   async _registrarMovimientoContable(movimiento) {
     try {
       const { error } = await supabase
@@ -634,10 +633,8 @@ export default {
     }
   },
 
-  /**
-   * Registrar movimientos de anulación
-   */
-  async _registrarMovimientosAnulacion(venta, usuario_id) {
+  async _registrarMovimientosAnulacion(venta, auth_id) {
+    // ✅ CAMBIADO parámetro
     const { id, forma_pago, monto } = venta;
 
     try {
@@ -648,8 +645,8 @@ export default {
           origen_id: id,
           descripcion: `Anulación venta al contado #${id}`,
           debe: 0,
-          haber: monto,
-          creado_por: usuario_id,
+          haber: parseFloat(monto),
+          creado_por: auth_id, // ✅ CAMBIADO
         });
       } else {
         await this._registrarMovimientoContable({
@@ -658,8 +655,8 @@ export default {
           origen_id: id,
           descripcion: `Anulación venta a crédito #${id}`,
           debe: 0,
-          haber: monto,
-          creado_por: usuario_id,
+          haber: parseFloat(monto),
+          creado_por: auth_id, // ✅ CAMBIADO
         });
       }
 
@@ -668,9 +665,9 @@ export default {
         origen_tabla: 'ventas',
         origen_id: id,
         descripcion: `Anulación ingreso venta #${id}`,
-        debe: monto,
+        debe: parseFloat(monto),
         haber: 0,
-        creado_por: usuario_id,
+        creado_por: auth_id, // ✅ CAMBIADO
       });
     } catch (error) {
       console.error('❌ Error registrando movimientos de anulación:', error);
@@ -678,9 +675,6 @@ export default {
     }
   },
 
-  /**
-   * Agrupar ventas para reportes
-   */
   _agruparVentas(ventas, agrupado_por) {
     const agrupado = {};
 
@@ -697,7 +691,7 @@ export default {
         case 'año':
           periodo = `${fecha.getFullYear()}`;
           break;
-        default: // 'dia'
+        default:
           periodo = fecha.toISOString().split('T')[0];
       }
 
@@ -724,24 +718,17 @@ export default {
 
   //! ============= MÉTODOS DE VALIDACIÓN =============
 
-  /**
-   * Validar datos de venta
-   */
   validarDatosVenta(ventaData) {
-    const { cliente_id, monto, usuario_id, forma_pago, items } = ventaData;
-
+    const { cliente_id, monto, auth_id, forma_pago, items } = ventaData; // ✅ CAMBIADO
     const errores = [];
 
-    if (!cliente_id || !monto || !usuario_id) {
-      errores.push('Campos requeridos: cliente_id, monto, usuario_id');
+    if (!cliente_id || !monto || !auth_id) {
+      // ✅ CAMBIADO
+      errores.push('Campos requeridos: cliente_id, monto, auth_id');
     }
 
-    if (typeof monto !== 'number' || isNaN(monto)) {
-      errores.push('Monto debe ser un número válido');
-    }
-
-    if (monto <= 0) {
-      errores.push('El monto debe ser mayor a cero');
+    if (typeof monto !== 'number' || isNaN(monto) || monto <= 0) {
+      errores.push('Monto debe ser un número válido mayor a cero');
     }
 
     if (forma_pago && !['contado', 'credito'].includes(forma_pago)) {
@@ -757,13 +744,14 @@ export default {
             }: requiere producto_id, cantidad y precio_unitario`
           );
         }
+        if (item.cantidad <= 0 || item.precio_unitario <= 0) {
+          errores.push(`Item ${index + 1}: cantidad y precio deben ser > 0`);
+        }
       });
     }
 
     return errores;
   },
-
-  //! ============= GETTERS =============
 
   get CUENTAS() {
     return CUENTAS;
