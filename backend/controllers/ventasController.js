@@ -8,16 +8,20 @@ import VentaModel from '../models/venta.model.js';
 export const getVentas = async (req, res) => {
   try {
     console.log('📋 Obteniendo ventas con filtros:', req.query);
+    console.log('👤 Usuario:', req.user.email);
 
     const filtros = {
       fecha_inicio: req.query.fecha_inicio,
       fecha_fin: req.query.fecha_fin,
       forma_pago: req.query.forma_pago,
-      cliente_id: req.query.cliente_id,
-      // ❌ ELIMINADO: estado: req.query.estado || 'activa',
+      cliente_id: req.query.cliente_id
+        ? parseInt(req.query.cliente_id)
+        : undefined,
     };
 
     const ventas = await VentaModel.findAll(filtros);
+
+    console.log(`✅ ${ventas.length} ventas obtenidas`);
 
     res.set('X-Total-Count', ventas.length);
     res.json(ventas);
@@ -60,25 +64,40 @@ export const getVentaById = async (req, res) => {
 export const createVenta = async (req, res) => {
   try {
     console.log('➕ Creando venta:', req.body);
+    console.log('👤 Usuario autenticado:', {
+      auth_id: req.user.id,
+      email: req.user.email,
+      username: req.user.username,
+    });
 
+    // ✅ CORRECCIÓN: Usar auth_id del middleware
     const ventaData = {
-      cliente_id: req.body.cliente_id,
-      monto: req.body.monto,
-      usuario_id: req.user.id, // Desde el middleware de auth
+      cliente_id: parseInt(req.body.cliente_id), // Asegurar que sea integer
+      monto: parseFloat(req.body.monto), // Asegurar que sea número
+      auth_id: req.user.id, // ⚠️ CRÍTICO: Este es el UUID de auth.users
       descripcion: req.body.descripcion,
       fecha_venta: req.body.fecha_venta,
       tipo: req.body.tipo || 'manual',
       comprobante_fiscal: req.body.comprobante_fiscal || false,
       forma_pago: req.body.forma_pago || 'contado',
       cuenta_contable_id: req.body.cuenta_contable_id,
-      descuento: req.body.descuento || 0,
-      itbis: req.body.itbis || 0,
+      descuento: parseFloat(req.body.descuento) || 0,
+      itbis: parseFloat(req.body.itbis) || 0,
       items: req.body.items || [],
     };
+
+    console.log('📝 Datos procesados para venta:', {
+      cliente_id: ventaData.cliente_id,
+      auth_id: ventaData.auth_id,
+      monto: ventaData.monto,
+      forma_pago: ventaData.forma_pago,
+      items_count: ventaData.items.length,
+    });
 
     // Validar datos
     const errores = VentaModel.validarDatosVenta(ventaData);
     if (errores.length > 0) {
+      console.error('❌ Validación fallida:', errores);
       return res.status(400).json({
         error: 'Datos inválidos',
         detalles: errores,
@@ -88,6 +107,7 @@ export const createVenta = async (req, res) => {
     // Verificar que el cliente existe
     const clienteExiste = await VentaModel.clienteExiste(ventaData.cliente_id);
     if (!clienteExiste) {
+      console.error('❌ Cliente no encontrado:', ventaData.cliente_id);
       return res.status(404).json({ error: 'Cliente no encontrado' });
     }
 
@@ -95,18 +115,21 @@ export const createVenta = async (req, res) => {
     const resultado = await VentaModel.create(ventaData);
 
     console.log(
-      `✅ Venta creada: ID ${resultado.venta_id}, Forma: ${resultado.forma_pago}, Monto: $${resultado.monto_total}`
+      `✅ Venta creada exitosamente: ID ${resultado.venta_id}, Forma: ${resultado.forma_pago}, Monto: $${resultado.monto_total}`
     );
 
     res.status(201).json({
       message: `Venta ${resultado.forma_pago} registrada exitosamente`,
+      success: true,
       ...resultado,
     });
   } catch (error) {
     console.error('❌ Error al crear venta:', error);
+    console.error('📋 Stack trace:', error.stack);
     res.status(500).json({
       error: 'Error al registrar la venta',
       details: error.message,
+      code: error.code || 'UNKNOWN',
     });
   }
 };
@@ -118,10 +141,13 @@ export const updateVenta = async (req, res) => {
   try {
     const { id } = req.params;
     console.log('✏️ Actualizando venta:', id);
+    console.log('👤 Usuario:', req.user.email);
 
     const datosActualizacion = {
-      cliente_id: req.body.cliente_id,
-      monto: req.body.monto,
+      cliente_id: req.body.cliente_id
+        ? parseInt(req.body.cliente_id)
+        : undefined,
+      monto: req.body.monto ? parseFloat(req.body.monto) : undefined,
       descripcion: req.body.descripcion,
       fecha_venta: req.body.fecha_venta,
       tipo: req.body.tipo,
@@ -146,8 +172,11 @@ export const updateVenta = async (req, res) => {
       return res.status(404).json({ error: 'Venta no encontrada' });
     }
 
+    console.log('✅ Venta actualizada:', id);
+
     res.json({
       message: 'Venta actualizada exitosamente',
+      success: true,
       venta: ventaActualizada,
     });
   } catch (error) {
@@ -166,11 +195,15 @@ export const deleteVenta = async (req, res) => {
   try {
     const { id } = req.params;
     console.log('🗑️ Eliminando venta:', id);
+    console.log('👤 Usuario:', req.user.email);
 
     const ventaEliminada = await VentaModel.delete(id);
 
+    console.log('✅ Venta eliminada:', id);
+
     res.json({
       message: 'Venta eliminada exitosamente',
+      success: true,
       venta_eliminada: ventaEliminada,
     });
   } catch (error) {
@@ -194,9 +227,11 @@ export const anularVenta = async (req, res) => {
   try {
     const { id } = req.params;
     const { motivo_anulacion } = req.body;
-    const usuario_id = req.user.id;
+    const auth_id = req.user.id; // ✅ Usar auth_id
 
-    console.log('❌ Anulando venta:', id, 'Motivo:', motivo_anulacion);
+    console.log('❌ Anulando venta:', id);
+    console.log('📝 Motivo:', motivo_anulacion);
+    console.log('👤 Usuario:', req.user.email);
 
     if (!motivo_anulacion) {
       return res.status(400).json({
@@ -207,11 +242,14 @@ export const anularVenta = async (req, res) => {
     const ventaAnulada = await VentaModel.anular(
       id,
       motivo_anulacion,
-      usuario_id
+      auth_id // ✅ Pasar auth_id
     );
+
+    console.log('✅ Venta anulada:', id);
 
     res.json({
       message: 'Venta anulada exitosamente',
+      success: true,
       venta: ventaAnulada,
     });
   } catch (error) {
@@ -234,6 +272,7 @@ export const anularVenta = async (req, res) => {
 export const getReporteVentas = async (req, res) => {
   try {
     console.log('📊 Generando reporte de ventas:', req.query);
+    console.log('👤 Usuario:', req.user.email);
 
     const filtros = {
       fecha_inicio: req.query.fecha_inicio,
@@ -243,6 +282,8 @@ export const getReporteVentas = async (req, res) => {
     };
 
     const reporte = await VentaModel.generarReporte(filtros);
+
+    console.log('✅ Reporte generado');
 
     res.json({
       success: true,
