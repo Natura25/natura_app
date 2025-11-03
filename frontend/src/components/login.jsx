@@ -1,116 +1,116 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../login.css';
+import './login.css';
 
 const Login = () => {
-  const [formData, setFormData] = useState({ username: '', password: '' });
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    // Limpiar error cuando el usuario empiece a escribir
-    if (error) setError('');
-  };
+  const API_URL = 'https://natura-app.onrender.com/api/auth';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
-
-    // Validación básica
-    if (!formData.username || !formData.password) {
-      setError('Por favor completa todos los campos');
-      setLoading(false);
-      return;
-    }
+    setLoading(true);
 
     try {
-      const response = await fetch(
-        'https://natura-app.onrender.com/api/auth/login',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
-          credentials: 'include', // MUY importante para enviar cookies
-        }
-      );
+      console.log('🔄 Intentando login con:', email);
+
+      const response = await fetch(`${API_URL}/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
       const data = await response.json();
 
-      if (response.ok) {
-        console.log('✅ Login exitoso:', data);
-        // Redirigir al dashboard experimental
-        navigate('/dashboard-experimental');
-      } else {
-        setError(data.message || 'Error al iniciar sesión');
+      if (!response.ok) {
+        // Si el email no está confirmado
+        if (data.email_not_confirmed) {
+          setError(
+            'Por favor confirma tu email antes de iniciar sesión. Revisa tu bandeja de entrada.'
+          );
+        } else {
+          setError(data.error || 'Error en el inicio de sesión');
+        }
+        return;
       }
-    } catch (error) {
-      console.error('❌ Error de conexión:', error);
-      setError('Error de conexión. Inténtalo de nuevo.');
+
+      console.log('✅ Login exitoso:', data);
+
+      // Guardar token y datos del usuario
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('refreshToken', data.refreshToken);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      // Redirigir al dashboard
+      navigate('/dashboard');
+    } catch (err) {
+      console.error('❌ Error en login:', err);
+      setError(err.message || 'Error al iniciar sesión');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleSubmit(e);
-    }
-  };
-
   return (
-    <div className="login-page">
-      <div className="container">
-        <h1>Iniciar Sesión</h1>
+    <div className="login-container">
+      <div className="login-card">
+        <div className="login-header">
+          <div className="logo-icon">🌿</div>
+          <h1>Natura</h1>
+          <p>Sistema de Gestión Empresarial</p>
+        </div>
 
-        {error && <div className="error">{error}</div>}
-
-        <form onSubmit={handleSubmit}>
-          <div className="form-container">
-            <div className="input-group">
-              <input
-                type="text"
-                name="username"
-                id="username"
-                placeholder="Usuario"
-                value={formData.username}
-                onChange={handleChange}
-                onKeyPress={handleKeyPress}
-                disabled={loading}
-                required
-              />
+        <form onSubmit={handleSubmit} className="login-form">
+          {error && (
+            <div className="error-message">
+              <span>⚠️</span>
+              <p>{error}</p>
             </div>
+          )}
 
-            <div className="input-group">
-              <input
-                type="password"
-                name="password"
-                id="password"
-                placeholder="Contraseña"
-                value={formData.password}
-                onChange={handleChange}
-                onKeyPress={handleKeyPress}
-                disabled={loading}
-                required
-              />
-            </div>
-
-            <button type="submit" disabled={loading}>
-              {loading ? 'Iniciando...' : 'Entrar'}
-            </button>
+          <div className="form-group">
+            <label htmlFor="email">📧 Email</label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="tu@email.com"
+              required
+              disabled={loading}
+            />
           </div>
 
-          <div className="links">
-            <a href="#" onClick={(e) => e.preventDefault()}>
-              ¿Olvidaste tu contraseña?
-            </a>
-            <a href="#" onClick={(e) => e.preventDefault()}>
-              Crear cuenta
-            </a>
+          <div className="form-group">
+            <label htmlFor="password">🔒 Contraseña</label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+              disabled={loading}
+            />
           </div>
+
+          <button type="submit" className="login-button" disabled={loading}>
+            {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+          </button>
         </form>
+
+        <div className="login-footer">
+          <p>
+            ¿No tienes cuenta? <a href="/registro">Regístrate aquí</a>
+          </p>
+        </div>
       </div>
     </div>
   );
