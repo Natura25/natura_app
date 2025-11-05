@@ -1,0 +1,82 @@
+.products {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+}
+
+.products__heading { margin-bottom: 16px; }
+.products__title { margin: 0; font-size: 22px; }
+.products__subtitle { margin: 8px 0 0; color: #4b5563; line-height: 1.6; }
+
+.products__intro {
+  display: grid;
+  grid-template-columns: minmax(0,1fr);
+  gap: 16px;
+}
+
+.products__intro-img {
+  width: 100%;
+  max-width: 360px;
+  justify-self: center;
+}
+
+.products__intro-text { color: #374151; line-height: 1.7; }
+
+.products__features { margin-top: 24px; display: grid; gap: 16px; }
+
+.feature {
+  background: #fff;
+  border: 2px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.06);
+}
+.feature__title { margin: 0; font-size: 18px; }
+.feature__list { margin: 12px 0 0 16px; color: #374151; line-height: 1.7; }
+.feature__cta { margin-top: 12px; }
+.btn {
+  background: #2563eb;
+  color: #fff;
+  border: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.products__social { margin-top: 32px; }
+.products__social-title { margin: 0; font-size: 18px; }
+.products__testimonials {
+  margin-top: 12px;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.testimonial {
+  background: #fff;
+  border: 2px solid #f3f4f6;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 6px 16px rgba(0,0,0,.05);
+}
+.testimonial__header { display: flex; align-items: center; gap: 8px; }
+.testimonial__avatar { width: 28px; height: 28px; border-radius: 50%; background: #fde68a; display: inline-block; }
+.testimonial__quote { margin: 12px 0 0; color: #374151; line-height: 1.6; }
+
+.products__cta {
+  margin-top: 32px;
+  display: grid;
+  grid-template-columns: minmax(0,1fr);
+  justify-items: center;
+  gap: 12px;
+}
+.products__cta-img { width: 220px; height: auto; filter: drop-shadow(0 10px 24px rgba(0,0,0,.15)); }
+.btn--danger { background: #ef4444; color: #fff; border-radius: 999px; padding: 10px 14px; }
+
+.products__faq { margin-top: 32px; }
+.products__faq-title { margin: 0; font-size: 18px; }
+.faq__item { border-bottom: 1px solid #e5e7eb; padding: 12px 0; }
+.faq__summary { cursor: pointer; font-weight: 600; }
+.faq__answer { margin: 8px 0 0; color: #4b5563; line-height: 1.6; }
+
+

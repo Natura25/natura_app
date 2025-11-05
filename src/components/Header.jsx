@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
-const Header = () => {
+const Header = ({ onNavigateSection, activeSection }) => {
     const navigate = useNavigate();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -11,9 +11,39 @@ const Header = () => {
                 <img src="src\\assets\\original.webp" alt="NaturaCifra Logo" className="logo-image" />
 
                 <nav className={`nav ${isMobileMenuOpen ? 'nav-open' : ''}`}>
-                    <a href="#inicio" onClick={() => setIsMobileMenuOpen(false)}>Inicio</a>
-                    <a href="#productos" onClick={() => setIsMobileMenuOpen(false)}>Productos</a>
-                    <a href="#contacto" onClick={() => setIsMobileMenuOpen(false)}>Contáctanos</a>
+                    <a
+                        href="#inicio"
+                        className={activeSection === 'inicio' ? 'active' : ''}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setIsMobileMenuOpen(false);
+                            onNavigateSection && onNavigateSection('inicio');
+                        }}
+                    >
+                        Inicio
+                    </a>
+                    <a
+                        href="#productos"
+                        className={activeSection === 'productos' ? 'active' : ''}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setIsMobileMenuOpen(false);
+                            onNavigateSection && onNavigateSection('productos');
+                        }}
+                    >
+                        Productos
+                    </a>
+                    <a
+                        href="#contacto"
+                        className={activeSection === 'contacto' ? 'active' : ''}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setIsMobileMenuOpen(false);
+                            onNavigateSection && onNavigateSection('contacto');
+                        }}
+                    >
+                        Contáctanos
+                    </a>
                 </nav>
 
                 <div
