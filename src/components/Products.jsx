@@ -51,23 +51,25 @@ export default function Products() {
   return (
     <main className="products">
       {/* Hero / Intro */}
-      <SectionHeading
-        title="Productos y servicios"
-        subtitle="Soluciones ligeras y potentes para administrar, analizar y mejorar tu operación. Integraciones simples, seguridad de nivel empresarial y soporte cercano."
-      />
-
-      {/* Hero image and intro grid */}
-      <section className="products__intro">
+      <section className="products__hero">
         <img
-          src="/images/natura.png"
+          src="/src/assets/home/results.webp"
           alt="Natura pieza"
-          className="products__intro-img"
+          className="products__hero-img"
         />
-        <p className="products__intro-text">
-          Desde el primer día obtienes visibilidad, control y datos precisos.
-          Configuración guiada y lista en minutos para empezar a generar valor.
-        </p>
+        <div className="products__hero-background-square"></div>
+        <div className="products__hero-container">
+          <SectionHeading
+            title="Productos y servicios"
+            subtitle="Soluciones ligeras y potentes para administrar, analizar y mejorar tu operación. Integraciones simples, seguridad de nivel empresarial y soporte cercano."
+          />
+        </div>
       </section>
+
+      <p className="products__intro-text">
+        Desde el primer día obtienes visibilidad, control y datos precisos.
+        Configuración guiada y lista en minutos para empezar a generar valor.
+      </p>
 
       {/* Feature cards */}
       <section className="products__features">
@@ -121,12 +123,14 @@ export default function Products() {
 
       {/* Video/CTA block */}
       <section className="products__cta">
-        <img
-          src="/images/natura.png"
-          alt="Video cover"
-          className="products__cta-img"
-        />
-        <button type="button" className="btn btn--danger">Ver demo rápida</button>
+        <div className="products__cta-media">
+          <img
+            src="/images/natura.png"
+            alt="Video cover"
+            className="products__cta-img"
+          />
+          <button type="button" className="products__play" aria-label="Reproducir demo" />
+        </div>
       </section>
 
       {/* FAQ */}
