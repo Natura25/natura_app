@@ -550,14 +550,51 @@ export default {
           subtotal: parseFloat(item.subtotal),
         };
 
-        console.log('📝 Insertando item:', itemData);
+        // ✅ Obtener costo del producto desde inventario
+        const costo_unitario = productoExiste.precio_compra || 0;
+        const costo_total = costo_unitario * item.cantidad;
+        const utilidad_item = itemData.subtotal - costo_total;
 
-        // ✅ Insertar en venta_items
-        const { data: itemInsertado, error: itemError } = await supabase
-          .from('venta_items')
-          .insert([itemData])
-          .select()
-          .single();
+        console.log('💰 Costos calculados:', {
+          costo_unitario,
+          costo_total,
+          utilidad_item,
+          precio_venta: itemData.precio_unitario,
+        });
+
+        console.log('📝 Insertando item con RPC:', itemData);
+
+        // ✅ Usar función RPC para evitar problemas de casting y triggers
+        const { data: itemInsertado, error: itemError } = await supabase.rpc(
+          'insertar_venta_item',
+          {
+            p_venta_id: itemData.venta_id,
+            p_producto_id: itemData.producto_id,
+            p_cantidad: itemData.cantidad,
+            p_precio_unitario: itemData.precio_unitario,
+            p_subtotal: itemData.subtotal,
+          }
+        );
+
+        if (itemError) {
+          console.error('❌ Error insertando item con RPC:', itemError);
+          console.error('📋 Item que causó error:', itemData);
+          throw itemError;
+        }
+
+        console.log('✅ Item insertado:', itemInsertado);
+
+        // ✅ Actualizar costos manualmente ya que el trigger está deshabilitado
+        if (itemInsertado && itemInsertado.id) {
+          await supabase
+            .from('venta_items')
+            .update({
+              costo_unitario,
+              costo_total,
+              utilidad_item,
+            })
+            .eq('id', itemInsertado.id);
+        }
 
         if (itemError) {
           console.error('❌ Error insertando item:', itemError);
@@ -567,11 +604,17 @@ export default {
 
         console.log('✅ Item insertado:', itemInsertado);
 
-        // ✅ Actualizar inventario
+        // ✅ Actualizar inventario con información completa
         await inventarioModel.actualizarStock(
           producto_id_inventario,
-          -item.cantidad,
-          'salida'
+          -item.cantidad, // Negativo para restar
+          'venta', // Tipo de movimiento
+          {
+            precio_unitario: itemData.precio_unitario,
+            referencia_id: ventaId,
+            motivo: `Venta #${ventaId}`,
+            usuario_id: auth_id,
+          }
         );
 
         console.log(

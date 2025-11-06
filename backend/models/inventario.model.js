@@ -180,34 +180,79 @@ export default {
     }
   },
 
-  async actualizarStock(productoId, cantidad, tipo) {
+  async actualizarStock(productoId, cantidad, tipo, datos = {}) {
     try {
+      console.log('📦 Actualizando stock:', { productoId, cantidad, tipo });
+
+      // 1. Obtener producto actual
       const { data: producto, error: fetchError } = await supabase
         .from('inventario')
-        .select('cantidad')
+        .select('cantidad, precio_compra, codigo, nombre')
         .eq('id', productoId)
         .single();
 
       if (fetchError) throw fetchError;
 
+      if (!producto) {
+        throw new Error(`Producto ${productoId} no encontrado`);
+      }
+
+      // 2. Calcular nueva cantidad
       const nuevaCantidad = producto.cantidad + cantidad;
 
       if (nuevaCantidad < 0) {
-        throw new Error('Stock insuficiente');
+        throw new Error(
+          `Stock insuficiente para ${producto.nombre}. ` +
+            `Disponible: ${producto.cantidad}, Solicitado: ${Math.abs(
+              cantidad
+            )}`
+        );
       }
 
-      const { data, error } = await supabase
+      // 3. Actualizar cantidad en inventario
+      const { data: productoActualizado, error: updateError } = await supabase
         .from('inventario')
         .update({
           cantidad: nuevaCantidad,
-          actualizado_en: new Date(),
+          actualizado_en: new Date().toISOString(),
+          actualizado_por: datos.usuario_id || null,
         })
         .eq('id', productoId)
         .select()
         .single();
 
-      if (error) throw error;
-      return data;
+      if (updateError) throw updateError;
+
+      console.log(
+        `✅ Stock actualizado: ${producto.cantidad} → ${nuevaCantidad}`
+      );
+
+      // 4. Registrar movimiento en movimientos_inventario
+      const movimiento = {
+        producto_id: productoId,
+        tipo: tipo, // 'entrada', 'salida', 'ajuste', 'venta', 'compra'
+        cantidad: Math.abs(cantidad), // Siempre positivo
+        precio_unitario: datos.precio_unitario || producto.precio_compra || 0,
+        referencia_id: datos.referencia_id || null,
+        motivo: datos.motivo || `Movimiento de tipo: ${tipo}`,
+        usuario_id: datos.usuario_id || null,
+      };
+
+      console.log('📝 Registrando movimiento:', movimiento);
+
+      const { error: movError } = await supabase
+        .from('movimientos_inventario')
+        .insert([movimiento]);
+
+      if (movError) {
+        console.error('❌ Error registrando movimiento:', movError);
+        // No lanzar error aquí para no bloquear la venta
+        // El stock ya se actualizó correctamente
+      } else {
+        console.log('✅ Movimiento registrado correctamente');
+      }
+
+      return productoActualizado;
     } catch (error) {
       console.error('❌ Error actualizando stock:', error);
       throw error;
