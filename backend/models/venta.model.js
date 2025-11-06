@@ -468,37 +468,118 @@ export default {
   //! ============= MÉTODOS PRIVADOS =============
 
   async _procesarItems(ventaId, items, auth_id) {
-    // ✅ CAMBIADO parámetro
     try {
+      console.log('🔄 Procesando items para venta:', ventaId);
+      console.log('📦 Items recibidos:', JSON.stringify(items, null, 2));
+
       for (const item of items) {
+        if (!item.producto_id) {
+          throw new Error(`Item sin producto_id: ${JSON.stringify(item)}`);
+        }
+
+        let producto_id_inventario;
+
+        // ✅ Detectar si es UUID (productos_servicios) o INTEGER (inventario)
+        const esUUID =
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+            item.producto_id
+          );
+
+        if (esUUID) {
+          console.log(
+            '🔄 producto_id es UUID, buscando en producto_inventario...'
+          );
+
+          // Buscar el inventario_id correspondiente
+          const { data: relacion, error: errorRelacion } = await supabase
+            .from('producto_inventario')
+            .select('inventario_id')
+            .eq('producto_servicio_id', item.producto_id)
+            .eq('es_producto_principal', true)
+            .single();
+
+          if (errorRelacion || !relacion) {
+            throw new Error(
+              `No se encontró inventario para producto_servicio_id: ${item.producto_id}. ` +
+                `Asegúrate de que el producto esté vinculado en la tabla producto_inventario.`
+            );
+          }
+
+          producto_id_inventario = relacion.inventario_id;
+          console.log(
+            `✅ UUID ${item.producto_id} → Inventario ID ${producto_id_inventario}`
+          );
+        } else {
+          // Ya es un INTEGER de inventario
+          producto_id_inventario = parseInt(item.producto_id, 10);
+
+          if (isNaN(producto_id_inventario)) {
+            throw new Error(`producto_id inválido: ${item.producto_id}`);
+          }
+        }
+
+        // ✅ Verificar que el producto existe en inventario
+        const { data: productoExiste, error: errorCheck } = await supabase
+          .from('inventario')
+          .select('id, codigo, nombre, cantidad')
+          .eq('id', producto_id_inventario)
+          .single();
+
+        if (errorCheck || !productoExiste) {
+          throw new Error(
+            `Producto ${producto_id_inventario} no encontrado en inventario`
+          );
+        }
+
+        console.log('✅ Producto encontrado:', productoExiste);
+
+        // ✅ Verificar stock disponible
+        if (productoExiste.cantidad < item.cantidad) {
+          throw new Error(
+            `Stock insuficiente para ${productoExiste.nombre}. ` +
+              `Disponible: ${productoExiste.cantidad}, Solicitado: ${item.cantidad}`
+          );
+        }
+
+        // ✅ Preparar datos del item
         const itemData = {
-          venta_id: ventaId,
-          producto_id: parseInt(item.producto_id),
+          venta_id: parseInt(ventaId, 10),
+          producto_id: producto_id_inventario,
           cantidad: parseFloat(item.cantidad),
           precio_unitario: parseFloat(item.precio_unitario),
           subtotal: parseFloat(item.subtotal),
         };
 
-        const { error: itemError } = await supabase
+        console.log('📝 Insertando item:', itemData);
+
+        // ✅ Insertar en venta_items
+        const { data: itemInsertado, error: itemError } = await supabase
           .from('venta_items')
-          .insert([itemData]);
+          .insert([itemData])
+          .select()
+          .single();
 
         if (itemError) {
           console.error('❌ Error insertando item:', itemError);
+          console.error('📋 Item que causó error:', itemData);
           throw itemError;
         }
 
-        // Actualizar inventario
+        console.log('✅ Item insertado:', itemInsertado);
+
+        // ✅ Actualizar inventario
         await inventarioModel.actualizarStock(
-          item.producto_id,
+          producto_id_inventario,
           -item.cantidad,
           'salida'
         );
 
         console.log(
-          `📉 Stock actualizado: Producto ${item.producto_id}, -${item.cantidad}`
+          `📉 Stock actualizado: ${productoExiste.nombre} (ID: ${producto_id_inventario}), -${item.cantidad}`
         );
       }
+
+      console.log('✅ Todos los items procesados correctamente');
     } catch (error) {
       console.error('❌ Error procesando items:', error);
       throw error;
