@@ -213,12 +213,15 @@ const DashboardModern = () => {
               </button>
             </li>
             <li className="nav-item">
-              <a href="/cuentas-cobrar" className="nav-link">
+              <button
+                className="nav-link"
+                onClick={() => navigate('/cuentas-por-cobrar')}
+              >
                 <span className="nav-icon">📋</span>
                 {!sidebarCollapsed && (
                   <span className="nav-text">Cuentas por Cobrar</span>
                 )}
-              </a>
+              </button>
             </li>
             <li className="nav-item">
               <button

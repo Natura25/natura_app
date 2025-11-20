@@ -9,7 +9,8 @@ import Login from './components/login';
 import DashboardModern from './components/DashboardModern';
 import Inventory from './components/Inventario'; //
 import ProtectedRoute from './components/ProtectedRoute'; //
-import Ventas from './components/Ventas';
+import Ventas from './components/ventas';
+import CuentasPorCobrar from './components/cuentasPorCobrar';
 
 function App() {
   return (
@@ -43,6 +44,15 @@ function App() {
           element={
             <ProtectedRoute>
               <Ventas />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/cuentas-por-cobrar"
+          element={
+            <ProtectedRoute>
+              <CuentasPorCobrar />
             </ProtectedRoute>
           }
         />

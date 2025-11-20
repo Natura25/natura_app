@@ -255,12 +255,10 @@ const Ventas = () => {
 
       const totales = calcularTotales();
 
-      // ✅ CORRECCIÓN: Agregar usuario_id del localStorage
-      const usuarioData = JSON.parse(localStorage.getItem('usuario') || '{}');
-
+      // ✅ CORRECCIÓN: NO enviar usuario_id ni auth_id
+      // El backend lo obtiene automáticamente del token
       const ventaData = {
         cliente_id: parseInt(formData.cliente_id),
-        usuario_id: usuarioData.id, // ✅ Agregar usuario_id
         monto: totales.subtotal,
         descripcion: formData.descripcion || null,
         forma_pago: formData.forma_pago,
@@ -272,6 +270,7 @@ const Ventas = () => {
           precio_unitario: item.precio_unitario,
           subtotal: item.subtotal,
         })),
+        // ❌ NO enviar: usuario_id, auth_id
       };
 
       console.log('📤 Enviando venta:', ventaData);
