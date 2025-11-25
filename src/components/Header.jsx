@@ -17,7 +17,19 @@ const Header = ({ onNavigateSection, activeSection }) => {
                         onClick={(e) => {
                             e.preventDefault();
                             setIsMobileMenuOpen(false);
-                            onNavigateSection && onNavigateSection('inicio');
+                            // Set section to 'inicio'
+                            if (activeSection !== 'inicio') {
+                                onNavigateSection && onNavigateSection('inicio');
+                            }
+                            // Scroll to top of inicio section
+                            setTimeout(() => {
+                                const inicioElement = document.getElementById('inicio');
+                                if (inicioElement) {
+                                    inicioElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                } else {
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }
+                            }, activeSection !== 'inicio' ? 150 : 50);
                         }}
                     >
                         Inicio
@@ -28,18 +40,38 @@ const Header = ({ onNavigateSection, activeSection }) => {
                         onClick={(e) => {
                             e.preventDefault();
                             setIsMobileMenuOpen(false);
-                            onNavigateSection && onNavigateSection('productos');
+                            // Set section to 'productos'
+                            if (activeSection !== 'productos') {
+                                onNavigateSection && onNavigateSection('productos');
+                            }
+                            // Scroll to top of productos section
+                            setTimeout(() => {
+                                const productosElement = document.getElementById('productos');
+                                if (productosElement) {
+                                    productosElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                }
+                            }, activeSection !== 'productos' ? 150 : 50);
                         }}
                     >
                         Productos
                     </a>
                     <a
                         href="#contacto"
-                        className={activeSection === 'contacto' ? 'active' : ''}
+                        className={activeSection === 'contacto' || activeSection === 'inicio' ? 'active' : ''}
                         onClick={(e) => {
                             e.preventDefault();
                             setIsMobileMenuOpen(false);
-                            onNavigateSection && onNavigateSection('contacto');
+                            // Set section to 'inicio' since contact form is in HomeContent
+                            if (activeSection !== 'inicio') {
+                                onNavigateSection && onNavigateSection('inicio');
+                            }
+                            // Scroll to contact form after a short delay to ensure DOM is updated
+                            setTimeout(() => {
+                                const contactElement = document.getElementById('contacto');
+                                if (contactElement) {
+                                    contactElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                }
+                            }, activeSection !== 'inicio' ? 150 : 50);
                         }}
                     >
                         Contáctanos

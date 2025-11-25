@@ -16,7 +16,6 @@ const Home = () => {
 
             {section === 'inicio' && <HomeContent />}
             {section === 'productos' && <Products />}
-            {section === 'contacto' && <Registro />}
 
             <Footer />
         </div>

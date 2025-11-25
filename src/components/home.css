@@ -154,31 +154,18 @@
 }
 
 
-.gear-large {
-    font-size: 8rem;
-    color: #F59E0B;
-    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
-}
-
-.gear-small {
-    font-size: 4rem;
-    color: #F59E0B;
-    position: absolute;
-    top: -2rem;
-    left: -2rem;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-}
-
 /* Feature Section */
-.feature {
+.feature-home {
     margin-top: 400px;
     background: white;
     padding: 4rem 0;
 }
 
 .feature-image {
-    width: 450px;
-    filter: hue-rotate(200deg);
+    width: 500px;
+    border-radius: 3px;
+    box-shadow: 1px 1px 5px rgb(221, 218, 218);
+    /* filter: hue-rotate(200deg); */
 }
 
 .feature-container {
@@ -223,23 +210,36 @@
 /* Call to Action Section */
 .cta {
     background: #F3F4F6;
+    margin: 20px;
     padding: 4rem 0;
     text-align: center;
 }
 
+.value-pict-container{
+    display: inline-block;
+}
+
+.value-pict-container p{
+    text-align: center;
+    margin: auto 5px;
+}
+
+.values-container,
 .cta-container {
     max-width: 800px;
-    margin: 0 auto;
+    margin: 80px auto;
     padding: 0 2rem;
 }
 
-.cta h2 {
+.core-values h2 {
     font-size: 2.5rem;
     margin-bottom: 1rem;
     color: #1F2937;
+    text-align: center;
 }
 
-.cta p {
+.cta p,
+.core-values p {
     font-size: 1.2rem;
     color: #6B7280;
     margin-bottom: 2rem;
@@ -286,13 +286,13 @@
 }
 
 .values-img {
-    width: 125px;
+    width: 100px;
     margin: 0 10px;
 }
 
 /* Contact Section */
 .contact {
-    background: #0B5DCC;
+    background: #000000;
     padding: 4rem 0;
     color: white;
 }
@@ -307,17 +307,20 @@
     align-items: center;
 }
 
+.contact-pict{
+    position: absolute;
+    left: 0;
+    height: 440px;
+    opacity: 30%;
+    margin: 0;
+}
+
 .contact-content {
     display: flex;
     flex-direction: column;
     gap: 2rem;
 }
 
-.gear-contact {
-    font-size: 6rem;
-    color: #F59E0B;
-    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
-}
 
 .contact-text h2 {
     font-size: 2.5rem;
@@ -346,7 +349,7 @@
 
 .contact-form textarea {
     height: 120px;
-    resize: vertical;
+    resize: none;
 }
 
 .send-btn {

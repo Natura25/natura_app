@@ -13,12 +13,12 @@ const HomeContent = () => {
             </section>
 
             {/* Feature Section */}
-            <section className="feature">
+            <section className="feature-home">
                 <div className="feature-container">
                     <div className="feature-divider"></div>
                     <div className="feature-content">
                         <div className="feature-graphic">
-                            <img src="src\\assets\\dash-logos\\rentabilidad.webp" alt="rentabilidad" className="feature-image" />
+                            <img src="src\\assets\\home\\results.webp" alt="rentabilidad" className="feature-image" />
                         </div>
                         <div className="feature-text">
                             <h2>¿Porqué NaturaCifra?</h2>
@@ -32,14 +32,6 @@ const HomeContent = () => {
             {/* Call to Action Section */}
             <section className="cta">
                 <div className="cta-container">
-                    <h2>¿Qué nos define?</h2>
-                    <div className='valores-logo'>
-                        <img src="src\\assets\\home\\1calidad.webp" alt="rentabilidad" className="values-img" />
-                        <img src="src\\assets\\home\\1innova.webp" alt="rentabilidad" className="values-img" />
-                        <img src="src\\assets\\home\\1integridad.webp" alt="rentabilidad" className="values-img" />
-                        <img src="src\\assets\\home\\1teamwork.webp" alt="rentabilidad" className="values-img" />
-                        <img src="src\\assets\\home\\respeto.webp" alt="rentabilidad" className="values-img" />
-                    </div>
                     <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
                     <div className="cta-buttons">
                         <button className="member-btn">Hazte miembro</button>
@@ -48,10 +40,43 @@ const HomeContent = () => {
                 </div>
             </section>
 
+            <section className="core-values">
+                <div className="values-container">
+                    <h2>¿Qué nos define?</h2>
+                    <div className='valores-logo'>
+                        <div className="value-pict-container">
+                            <img src="src\\assets\\home\\1calidad.webp" alt="rentabilidad" className="values-img" />
+                            <p>Calidad</p>
+                        </div>
+
+                        <div className="value-pict-container">
+                            <img src="src\\assets\\home\\1integridad.webp" alt="rentabilidad" className="values-img" />
+                            <p>Integridad</p>
+                        </div>
+
+                        <div className="value-pict-container">
+                            <img src="src\\assets\\home\\1innova.webp" alt="rentabilidad" className="values-img" />
+                            <p>Innovación</p>
+                        </div>
+
+                        <div className="value-pict-container">
+                            <img src="src\\assets\\home\\1teamwork.webp" alt="rentabilidad" className="values-img" />
+                            <p>Compañerismo</p>
+                        </div>
+
+                        <div className="value-pict-container">
+                            <img src="src\\assets\\home\\respeto.webp" alt="rentabilidad" className="values-img" />
+                            <p>Respeto</p>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
             {/* Contact Form Section */}
             <section className="contact" id="contacto">
                 <div className="contact-container">
-                    <img src="src\\assets\\home\\1teamwork.webp" alt="rentabilidad" className="values-img" />
+                    <img src="src\\assets\\home\\meeting2.webp" alt="rentabilidad" className="contact-pict" />
                     <div className="contact-content">
                         <div className="contact-text">
                             <h2>Contactanos</h2>
@@ -62,7 +87,7 @@ const HomeContent = () => {
                     <div className="contact-form">
                         <input type="text" placeholder="Name" />
                         <input type="email" placeholder="Email" />
-                        <textarea placeholder="Mensaje"></textarea>
+                        <textarea placeholder="Mensaje" ></textarea>
                         <button className="send-btn">Enviar</button>
                     </div>
                 </div>

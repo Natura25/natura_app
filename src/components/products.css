@@ -14,7 +14,7 @@
 
 .products__hero-img {
   width: 100%;
-  height: 600px;
+  height: 600px; 
   object-fit: cover;
   position: absolute;
   object-position: top;
@@ -51,6 +51,7 @@
   color: rgb(204, 204, 204);
   font-weight: bold;
 }
+
 .products__subtitle { 
   margin: 8px 0 0; 
   color: white; 
@@ -67,22 +68,47 @@
 }
 
 .products__features { 
-  margin-top: 24px; 
-  display: grid; 
-  gap: 16px; 
-  max-width: 960px;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0 auto;
   padding: 0 24px;
+  display: grid; 
+  align-content: start;
+  align-items: start;
+  gap: 16px;
+  max-width: 960px;
 }
 
 .feature {
+  position: relative;
+  margin-top: 0;
+  height: 400px; 
   background: #fff;
   border: 2px solid #e5e7eb;
   border-radius: 16px;
   padding: 16px;
   box-shadow: 0 6px 20px rgba(0,0,0,.06);
+  overflow: hidden;
 }
+
+.feature__badge {
+  position: absolute;
+  top: 30px;
+  right: -45px;
+  background: #6c0afe;
+  color: rgb(255, 230, 0);
+  padding: 6px 40px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transform: rotate(45deg);
+  transform-origin: center;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0,0,0,.2);
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+
 .feature__title { margin: 0; font-size: 18px; }
 .feature__list { margin: 12px 0 0 16px; color: #374151; line-height: 1.7; }
 .feature__cta { margin-top: 12px; }

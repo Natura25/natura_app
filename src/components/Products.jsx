@@ -10,9 +10,10 @@ function SectionHeading({ title, subtitle }) {
   );
 }
 
-function FeatureCard({ title, items }) {
+function FeatureCard({ title, items, isPopular }) {
   return (
     <article className="feature">
+      {isPopular && <span className="feature__badge">Most popular</span>}
       <h3 className="feature__title">{title}</h3>
       <ul className="feature__list">
         {items.map((text, idx) => (
@@ -49,7 +50,7 @@ function FaqItem({ q, a }) {
 
 export default function Products() {
   return (
-    <main className="products">
+    <main className="products" id="productos">
       {/* Hero / Intro */}
       <section className="products__hero">
         <img
@@ -90,6 +91,7 @@ export default function Products() {
             "Flujos de caja y presupuestos",
             "Impuestos automatizados",
           ]}
+          isPopular={true}
         />
         <FeatureCard
           title="Ventas y clientes"
