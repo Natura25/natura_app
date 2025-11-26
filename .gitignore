@@ -29,3 +29,7 @@ Thumbs.db
 
 # Optional: si usas coverage de tests
 coverage/
+
+# Archivos agregados en rama tests
+respaldo.sql
+test

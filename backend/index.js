@@ -1,71 +1,52 @@
 import express from 'express';
-import db from './schemas/db.js';
-import session from 'express-session';
+import cors from 'cors';
 import authRoutes from './routes/authController.route.js';
 import ventasRoutes from './routes/ventasController.route.js';
+import cuentasRoutes from './routes/cuentasPorCobrar.route.js';
+import cuentasContablesRoutes from './routes/cuentasContables.route.js';
+import cuentasPorPagarRoutes from './routes/cuentasPorPagar.route.js';
+import inventarioRoutes from './routes/inventario.route.js';
+import costosRoutes from './routes/costos.route.js';
+import clientesRoutes from './routes/clientes.routes.js';
 
 const app = express();
 
 app.use(express.json());
 
+// ✅ CORS SIMPLIFICADO para JWT (no necesitas cookies)
+console.log('🔧 Setting up CORS...');
 app.use(
-  session({
-    secret: process.env.SESSION_SECRET || 'secreto123',
-    resave: false,
-    saveUninitialized: false,
+  cors({
+    origin: [
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'https://localhost:5173',
+      'https://natura-app.onrender.com',
+    ],
+    // credentials: true, ← YA NO NECESITAS ESTO
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'], // ← Solo necesitas Authorization
   })
 );
 
-app.use('/api/auth', authRoutes); // Rutas de autenticación
-app.use('/api/ventas', ventasRoutes); // Rutas de ventas
+//! Rutas
+app.use('/api/auth', authRoutes);
+app.use('/api/ventas', ventasRoutes);
+app.use('/api/cuentas', cuentasRoutes);
+app.use('/api/contabilidad', cuentasContablesRoutes);
+app.use('/api/cuentas-pagar', cuentasPorPagarRoutes);
+app.use('/api/inventario', inventarioRoutes);
+app.use('/api/costos', costosRoutes);
+app.use('/api/clientes', clientesRoutes);
 
-app.get('/', (req, res) => {
-  res.send('Hello World!');
-});
+import expressListEndpoints from 'express-list-endpoints';
 
-app.get('/api/usuarios', async (req, res) => {
-  try {
-    const [rows] = await db.query('SELECT * FROM usuarios');
-    res.json(rows);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
+console.log('📋 Rutas detectadas:');
+console.table(expressListEndpoints(app));
 
-app.get('/api/usuarios/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const [rows] = await db.query(
-      'SELECT id, username, cedula, rol FROM usuarios WHERE id = ?',
-      [id]
-    );
-
-    if (rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    res.json(rows[0]); // Solo enviamos un objeto, no un array de 1 elemento
-  } catch (error) {
-    console.error('❌ Error:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
-
-//! Revisa si la base de datos está conectada
-
-try {
-  const connection = await db.getConnection();
-  console.log('connected to the database');
-  connection.release(); // Libera la conexion una vez que se ha utilizado
-} catch (error) {
-  console.error('Error connecting to the database:', error);
-  process.exit(1); // sale del proceso si no se puede conectar a la base de datos
-}
-
-//! Puerto del servidor
-
+// Puerto
 const PORT = process.env.PORT ?? 3000;
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`🟢 Server is running on port ${PORT}`);
+  console.log(`🔧 NODE_ENV: ${process.env.NODE_ENV}`);
 });
