@@ -216,7 +216,8 @@
 }
 
 .value-pict-container{
-    display: inline-block;
+    display: flex;
+    
 }
 
 .value-pict-container p{

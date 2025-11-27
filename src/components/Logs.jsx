@@ -30,26 +30,54 @@ const Login = () => {
 
     // Simple validation
     if (!formData.email || !formData.password) {
-      setError('Please fill in all fields');
+      setError('Por favor completa todos los campos');
       setIsLoading(false);
       return;
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      // For demo purposes, accept any email/password combination
-      if (formData.email && formData.password) {
-        login({
-          id: 1,
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'https://natura-app.onrender.com/api';
+      
+      console.log('🔄 Intentando login con:', formData.email);
+
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           email: formData.email,
-          name: formData.email.split('@')[0]
-        });
-        navigate('/dashboard');
-      } else {
-        setError('Invalid credentials');
+          password: formData.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || 'Error en el inicio de sesión');
+        setIsLoading(false);
+        return;
       }
+
+      console.log('✅ Login exitoso:', data);
+
+      // Guardar tokens en localStorage
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('refreshToken', data.refreshToken);
+      localStorage.setItem('authToken', data.token); // Para compatibilidad con AuthContext
+      localStorage.setItem('userData', JSON.stringify(data.user));
+
+      // Actualizar contexto de autenticación
+      login(data.user);
+
+      // Redirigir al dashboard
+      navigate('/dashboard');
+    } catch (err) {
+      console.error('❌ Error en login:', err);
+      setError(err.message || 'Error al iniciar sesión. Por favor intenta de nuevo.');
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -104,9 +132,6 @@ const Login = () => {
             <p className='reset'>Olvidé mi contraseña, <a href="">recuperar</a>.</p>
           </form>
 
-          <div className="login-footer">
-            <p>Demo: Use any email and password to login</p>
-          </div>
         </div>
       </div>
 

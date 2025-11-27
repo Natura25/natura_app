@@ -1,0 +1,187 @@
+/* Supplier Review page - extends dashboard styles */
+
+.supplier-review-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.supplier-review-header {
+  padding: 24px 32px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  background: #f8fafc;
+}
+
+.supplier-pill {
+  display: inline-flex;
+  padding: 4px 12px;
+  background: #ecfeff;
+  border: 1px solid #a5f3fc;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0e7490;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.supplier-review-header h2 {
+  margin: 8px 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.supplier-description {
+  margin: 8px 0 0 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.supplier-header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background: #10B981;
+  color: white;
+  border-color: #10B981;
+}
+
+.btn-primary:hover {
+  background: #059669;
+  border-color: #059669;
+}
+
+.btn-secondary {
+  background: white;
+  color: #64748b;
+  border-color: #e2e8f0;
+}
+
+.btn-secondary:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #1a202c;
+}
+
+.supplier-table-section {
+  padding: 24px 32px;
+}
+
+.supplier-table-wrapper {
+  max-height: 600px;
+  overflow: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.supplier-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.supplier-table thead {
+  background: #f9fafb;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.supplier-table th,
+.supplier-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+}
+
+.supplier-table th:first-child,
+.supplier-table td:first-child {
+  width: 50px;
+  text-align: center;
+}
+
+.supplier-table th {
+  font-weight: 600;
+  color: #374151;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.supplier-table tbody tr:nth-child(even) {
+  background: #f9fafb;
+}
+
+.supplier-table tbody tr:hover {
+  background: #f3f4f6;
+}
+
+.supplier-actions-cell {
+  text-align: right;
+  width: 100px;
+}
+
+.icon-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px 8px;
+  font-size: 18px;
+  margin-left: 4px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.icon-button:hover {
+  background: #f3f4f6;
+  transform: translateY(-1px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .supplier-review-header {
+    flex-direction: column;
+    padding: 20px;
+  }
+
+  .supplier-header-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .supplier-table-section {
+    padding: 16px;
+  }
+
+  .supplier-table-wrapper {
+    max-height: 400px;
+  }
+
+  .supplier-table th,
+  .supplier-table td {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+}
+
