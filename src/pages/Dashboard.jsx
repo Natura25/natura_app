@@ -22,12 +22,12 @@ const Dashboard = () => {
   ];
 
   const [activeMenu, setActiveMenu] = useState('dashboard');
+  const [activeModule, setActiveModule] = useState(null);
 
   // Business modules grid
   const businessModules = [
     { id: 'clientes', label: 'Clientes', icon: '👥', color: '#3B82F6' },
     { id: 'suplidores', label: 'Suplidores', icon: '🚚', color: '#10B981' },
-    // { id: 'empleados', label: 'Empleados', icon: '../assets/dash-logos/employee.webp', color: '#F59E0B' },
     { id: 'activos', label: 'Activos', icon: '💎', color: '#8B5CF6' },
     { id: 'inventario', label: 'Inventario', icon: '🏢', color: '#EF4444' },
     { id: 'costos', label: 'Costos', icon: '💰', color: '#06B6D4' },
@@ -36,10 +36,46 @@ const Dashboard = () => {
     { id: 'reportes', label: 'Reportes financieros', icon: '📊', color: '#EC4899' },
   ];
 
-  const handleModuleClick = (moduleId) => {
-    console.log(`Clicked on module: ${moduleId}`);
-    // Add navigation logic here
+  const moduleActions = {
+    suplidores: [
+      {
+        id: 'crud',
+        title: 'CRUD',
+        description: 'Gestiona la base de datos de suplidores',
+      },
+      {
+        id: 'purchase',
+        title: 'Crear compra a suplidor',
+        description: 'Registra nuevas órdenes o solicitudes',
+      },
+      {
+        id: 'accounts',
+        title: 'Ver cuentas por pagar',
+        description: 'Consulta obligaciones abiertas',
+      },
+      {
+        id: 'register-payment',
+        title: 'Registrar pago a suplidor',
+        description: 'Aplica pagos y conciliaciones',
+      },
+      {
+        id: 'alerts',
+        title: 'Notificación de vencimiento',
+        description: 'Configura alertas de vencimiento',
+      },
+    ],
   };
+
+  const handleModuleClick = (moduleId) => {
+    if (moduleId === 'suplidores') {
+      navigate('/suplidores');
+      return;
+    }
+    setActiveModule((prev) => (prev === moduleId ? null : moduleId));
+  };
+
+  const activeModuleLabel =
+    businessModules.find((module) => module.id === activeModule)?.label || '';
 
   return (
     <div className="dashboard">
@@ -115,17 +151,64 @@ const Dashboard = () => {
               {businessModules.map((module) => (
                 <button
                   key={module.id}
-                  className="module-card"
+                  className={`module-card ${activeModule === module.id ? 'selected' : ''}`}
                   onClick={() => handleModuleClick(module.id)}
                   style={{ '--module-color': module.color }}
                 >
                   <div className="module-icon">
-                    <img src={module.icon} alt={module.icon} />
+                    <span
+                      className="module-emoji"
+                      role="img"
+                      aria-label={module.label}
+                    >
+                      {module.icon}
+                    </span>
                   </div>
                   <span className="module-label">{module.label}</span>
                 </button>
               ))}
             </div>
+
+            {activeModule && moduleActions[activeModule] && (
+              <section className="module-submenu">
+                <div className="submenu-header">
+                  <div>
+                    <p className="submenu-pill">{activeModuleLabel}</p>
+                    <h3>Operaciones frecuentes</h3>
+                    <p className="submenu-description">
+                      Accesos directos para gestionar procesos con{' '}
+                      {activeModuleLabel || 'este módulo'}.
+                    </p>
+                  </div>
+                  <button
+                    className="submenu-close"
+                    onClick={() => setActiveModule(null)}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="submenu-grid">
+                  {moduleActions[activeModule].map((action) => (
+                    <button 
+                      key={action.id} 
+                      className="submenu-card"
+                      onClick={() => {
+                        if (activeModule === 'suplidores') {
+                          navigate('/suplidores');
+                        }
+                      }}
+                    >
+                      <div className="submenu-card-body">
+                        <h4>{action.title}</h4>
+                        <p>{action.description}</p>
+                      </div>
+                      <span className="submenu-card-arrow">➜</span>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
             
             {/* Data Visualizations */}
             <div className="charts-section">

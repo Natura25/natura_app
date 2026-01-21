@@ -33,6 +33,12 @@
     align-items: center;
 }
 
+.valores-logo{
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
 .logo-image {
     width: 250px;
     height: auto;
@@ -216,7 +222,11 @@
 }
 
 .value-pict-container{
-    display: inline-block;
+    /* border:1px solid red; */
+    display: flex;
+    flex-flow: column nowrap;
+    justify-items:start;
+    
 }
 
 .value-pict-container p{
@@ -229,6 +239,8 @@
     max-width: 800px;
     margin: 80px auto;
     padding: 0 2rem;
+    display: flex;
+    flex-flow: row wrap;
 }
 
 .core-values h2 {
@@ -248,8 +260,7 @@
 .cta-buttons {
     display: flex;
     gap: 1rem;
-    justify-content: center;
-    flex-wrap: wrap;
+
 }
 
 .member-btn {

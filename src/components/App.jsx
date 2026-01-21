@@ -4,6 +4,8 @@ import ProtectedRoute from './ProtectedRoute';
 import Home from './home';
 import Login from './Logs';
 import Dashboard from '../pages/Dashboard';
+import Suplidores from '../pages/Suplidores';
+import SupplierReview from '../pages/SupplierReview';
 import './App.css';
 import '../styles/normalize.css';
 
@@ -32,6 +34,24 @@ function AppContent() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/suplidores"
+        element={
+          <ProtectedRoute>
+            <Suplidores />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/suplidores/crud"
+        element={
+          <ProtectedRoute>
+            <SupplierReview />
           </ProtectedRoute>
         }
       />
