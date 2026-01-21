@@ -19,7 +19,7 @@ const Login = () => {
     try {
       console.log('🔄 Intentando login con:', email);
 
-      const response = await fetch(`${API_URL}/login`, {
+      const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -46,6 +46,7 @@ const Login = () => {
       // Guardar token y datos del usuario
       localStorage.setItem('token', data.token);
       localStorage.setItem('refreshToken', data.refreshToken);
+      localStorage.setItem('authToken', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
 
       // Redirigir al dashboard
