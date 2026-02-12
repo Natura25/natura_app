@@ -42,7 +42,7 @@ export async function login(req, res) {
         cedula: userData.cedula,
         telefono: userData.telefono,
         rol_id: userData.rol_id,
-        activo: userData.activo,
+        estado: userData.estado,
       },
     });
   } catch (error) {
@@ -74,14 +74,21 @@ export async function signup(req, res) {
     // 2. Crear registro en nuestra tabla de usuarios usando el UUID de Supabase
     const { error: dbError } = await supabase.from('perfiles_usuario').insert([
       {
-        user_id: data.user.id, // Este es el UUID de Supabase Auth
+        user_id: data.user.id,
+        username: username,
         nombres: username,
-        email: data.user.email,
+        apellidos: '', // Campo requerido
         cedula: cedula || null,
         telefono: telefono || null,
-        rol_id: 2, // Valor por defecto
-        activo: true,
-        creado_en: new Date(),
+        rol_id: (
+          await supabase
+            .from('roles')
+            .select('id')
+            .eq('nombre', 'lector')
+            .single()
+        ).data.id,
+        estado: 'estado',
+        // creado_en se genera automáticamente
       },
     ]);
 
@@ -136,7 +143,7 @@ export async function getSession(req, res) {
     // Obtenemos los datos del usuario usando el UUID de Supabase
     const { data: userData, error: userError } = await supabase
       .from('perfiles_usuario')
-      .select('username, email, cedula, telefono, rol_id, activo')
+      .select('username, cedula, telefono, rol_id, estado')
       .eq('user_id', user.id) // Buscamos por el UUID de Supabase
       .single();
 
@@ -157,7 +164,7 @@ export async function getSession(req, res) {
         cedula: userData.cedula,
         telefono: userData.telefono,
         rol_id: userData.rol_id,
-        activo: userData.activo,
+        estado: userData.estado,
       },
     });
   } catch (error) {
