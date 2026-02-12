@@ -11,6 +11,8 @@ import Inventory from './components/Inventario'; //
 import ProtectedRoute from './components/ProtectedRoute'; //
 import Ventas from './components/ventas';
 import CuentasPorCobrar from './components/cuentasPorCobrar';
+import Empleados from './components/Empleados';
+import Nominas from './components/Nominas';
 
 function App() {
   return (
@@ -19,6 +21,8 @@ function App() {
         {/* Rutas públicas - no necesitan autenticación */}
         <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/empleados" element={<Empleados />} />
+        <Route path="/nominas" element={<Nominas />} />
 
         {/* Rutas protegidas - necesitan autenticación */}
         <Route

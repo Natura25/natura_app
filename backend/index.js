@@ -9,6 +9,7 @@ import inventarioRoutes from './routes/inventario.route.js';
 import costosRoutes from './routes/costos.route.js';
 import clientesRoutes from './routes/clientes.routes.js';
 import proveedoresRoutes from './routes/proveedores.route.js';
+import nominaRoutes from './routes/nomina.routes.js';
 
 const app = express();
 
@@ -27,7 +28,7 @@ app.use(
     // credentials: true, ← YA NO NECESITAS ESTO
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'], // ← Solo necesitas Authorization
-  })
+  }),
 );
 
 //! Rutas
@@ -40,6 +41,7 @@ app.use('/api/inventario', inventarioRoutes);
 app.use('/api/costos', costosRoutes);
 app.use('/api/clientes', clientesRoutes);
 app.use('/api/proveedores', proveedoresRoutes);
+app.use('/api/nomina', nominaRoutes);
 
 import expressListEndpoints from 'express-list-endpoints';
 

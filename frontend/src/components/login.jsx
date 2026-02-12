@@ -9,7 +9,8 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const API_URL = 'https://natura-app.onrender.com/api/auth';
+  const API_URL = 'https://natura-app.onrender.com/api';
+  const API_URL_LOCAL = 'http://localhost:3000/api';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,7 +34,7 @@ const Login = () => {
         // Si el email no está confirmado
         if (data.email_not_confirmed) {
           setError(
-            'Por favor confirma tu email antes de iniciar sesión. Revisa tu bandeja de entrada.'
+            'Por favor confirma tu email antes de iniciar sesión. Revisa tu bandeja de entrada.',
           );
         } else {
           setError(data.error || 'Error en el inicio de sesión');

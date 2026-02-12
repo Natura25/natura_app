@@ -1,0 +1,253 @@
+/* src/pages/Nomina.css */
+/* Estilos compartidos para el módulo de nómina */
+
+/* Reutiliza todo de Inventario.css y agrega específicos */
+
+.text-right {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* Badges de estado específicos */
+.stock-badge.calculado {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.stock-badge.aprobado {
+  background-color: #cfe2ff;
+  color: #084298;
+}
+
+.stock-badge.pagado {
+  background-color: #d1e7dd;
+  color: #0f5132;
+}
+
+/* Tabla de resumen */
+.resumen-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.resumen-card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.resumen-label {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.resumen-valor {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1a1a1a;
+}
+
+.resumen-valor.positivo {
+  color: #4caf50;
+}
+
+.resumen-valor.negativo {
+  color: #f44336;
+}
+
+/* Pasos del wizard */
+.wizard-steps {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  position: relative;
+}
+
+.wizard-steps::before {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #e0e0e0;
+  z-index: 0;
+}
+
+.wizard-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+  flex: 1;
+}
+
+.wizard-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.wizard-step.active .wizard-circle {
+  background: #4caf50;
+  border-color: #4caf50;
+  color: white;
+}
+
+.wizard-step.completed .wizard-circle {
+  background: #4caf50;
+  border-color: #4caf50;
+  color: white;
+}
+
+.wizard-label {
+  font-size: 13px;
+  color: #666;
+  text-align: center;
+}
+
+.wizard-step.active .wizard-label {
+  color: #4caf50;
+  font-weight: 600;
+}
+
+/* Lista de selección */
+.select-list {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.select-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.select-item:hover {
+  background: #f8f9fa;
+}
+
+.select-item.selected {
+  background: #e8f5e9;
+  border-color: #4caf50;
+}
+
+.select-checkbox {
+  width: 20px;
+  height: 20px;
+  margin-right: 12px;
+  cursor: pointer;
+}
+
+.select-info {
+  flex: 1;
+}
+
+.select-name {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.select-meta {
+  font-size: 13px;
+  color: #666;
+}
+
+/* Info boxes */
+.info-box {
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  display: flex;
+  gap: 12px;
+}
+
+.info-box.warning {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  color: #856404;
+}
+
+.info-box.info {
+  background: #cfe2ff;
+  border: 1px solid #0d6efd;
+  color: #084298;
+}
+
+.info-box.success {
+  background: #d1e7dd;
+  border: 1px solid #198754;
+  color: #0f5132;
+}
+
+.info-icon {
+  font-size: 24px;
+}
+
+/* Tabla de movimientos */
+.movimientos-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.movimientos-table th,
+.movimientos-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.movimientos-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  font-size: 14px;
+  color: #666;
+}
+
+.movimiento-percepcion {
+  color: #4caf50;
+}
+
+.movimiento-deduccion {
+  color: #f44336;
+}
+
+/* Responsive específico para nómina */
+@media (max-width: 768px) {
+  .resumen-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .wizard-steps {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .wizard-steps::before {
+    display: none;
+  }
+}

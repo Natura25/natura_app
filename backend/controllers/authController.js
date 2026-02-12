@@ -15,11 +15,13 @@ export async function login(req, res) {
       return res.status(401).json({ error: error.message });
     }
 
-    // Obtenemos los datos del usuario de la tabla usuarios
+    // Obtenemos los datos del usuario de la tabla perfiles_usuario
     const { data: userData, error: userError } = await supabase
-      .from('usuarios')
-      .select('id, username, auth_id, email, cedula, telefono, rol_id, activo')
-      .eq('email', email)
+      .from('perfiles_usuario')
+      .select(
+        'user_id, username, nombres, apellidos, cedula, telefono, rol_id, estado',
+      )
+      .eq('user_id', data.user.id) // Buscamos por el UUID de Supabase
       .single();
 
     if (userError) {
@@ -34,8 +36,7 @@ export async function login(req, res) {
       token: data.session.access_token,
       refreshToken: data.session.refresh_token,
       user: {
-        id: userData.id,
-        auth_id: data.user.id,
+        id: data.user.id,
         username: userData.username,
         email: data.user.email,
         cedula: userData.cedula,
@@ -71,11 +72,11 @@ export async function signup(req, res) {
     }
 
     // 2. Crear registro en nuestra tabla de usuarios usando el UUID de Supabase
-    const { error: dbError } = await supabase.from('usuarios').insert([
+    const { error: dbError } = await supabase.from('perfiles_usuario').insert([
       {
-        auth_id: data.user.id, // Este es el UUID de Supabase Auth
-        username: username,
-        email: email,
+        user_id: data.user.id, // Este es el UUID de Supabase Auth
+        nombres: username,
+        email: data.user.email,
         cedula: cedula || null,
         telefono: telefono || null,
         rol_id: 2, // Valor por defecto
@@ -134,9 +135,9 @@ export async function getSession(req, res) {
 
     // Obtenemos los datos del usuario usando el UUID de Supabase
     const { data: userData, error: userError } = await supabase
-      .from('usuarios')
+      .from('perfiles_usuario')
       .select('username, email, cedula, telefono, rol_id, activo')
-      .eq('auth_id', user.id) // Buscamos por el UUID de Supabase
+      .eq('user_id', user.id) // Buscamos por el UUID de Supabase
       .single();
 
     if (userError) {
@@ -244,7 +245,7 @@ export async function migrateUsers(req, res) {
 
     // Obtener todos los usuarios de tu tabla
     const { data: users, error: usersError } = await supabase
-      .from('usuarios')
+      .from('perfiles_usuario')
       .select('*');
 
     if (usersError) throw usersError;
@@ -257,7 +258,7 @@ export async function migrateUsers(req, res) {
         // Si ya tiene auth_id, saltar
         if (user.auth_id) {
           console.log(
-            `✅ Usuario ${user.email} ya tiene auth_id: ${user.auth_id}`
+            `✅ Usuario ${user.email} ya tiene auth_id: ${user.auth_id}`,
           );
           continue;
         }
@@ -272,7 +273,7 @@ export async function migrateUsers(req, res) {
                 username: user.username,
               },
             },
-          }
+          },
         );
 
         if (authError) {
@@ -283,19 +284,19 @@ export async function migrateUsers(req, res) {
 
         // Actualizar la tabla con el auth_id
         const { error: updateError } = await supabase
-          .from('usuarios')
+          .from('perfiles_usuario')
           .update({ auth_id: authData.user.id })
           .eq('id', user.id);
 
         if (updateError) {
           console.error(
             `❌ Error actualizando usuario ${user.email}:`,
-            updateError
+            updateError,
           );
           errorCount++;
         } else {
           console.log(
-            `✅ Usuario ${user.email} migrado con auth_id: ${authData.user.id}`
+            `✅ Usuario ${user.email} migrado con auth_id: ${authData.user.id}`,
           );
           migratedCount++;
         }

@@ -26,22 +26,22 @@ export async function verificarToken(req, res, next) {
       return res.status(403).json({ error: 'Invalid or expired token' });
     }
 
-    // ⚠️ IMPORTANTE: Obtener datos adicionales del usuario desde la tabla usuarios
+    // ⚠️ IMPORTANTE: Obtener datos adicionales del usuario desde la tabla perfiles_usuario
     const { data: usuarioData, error: usuarioError } = await supabase
-      .from('usuarios')
+      .from('perfiles_usuario')
       .select(
         `
         *,
         rol:roles(id, nombre)
-      `
+      `,
       )
-      .eq('auth_id', user.id)
+      .eq('user_id', user.id)
       .single();
 
     if (usuarioError) {
       console.error(
-        '⚠️ Usuario no encontrado en tabla usuarios:',
-        usuarioError
+        '⚠️ Usuario no encontrado en tabla perfiles_usuario:',
+        usuarioError,
       );
       // Continuar con datos básicos si el usuario no está en la tabla
     }
@@ -53,9 +53,8 @@ export async function verificarToken(req, res, next) {
       email_confirmed: user.email_confirmed_at !== null,
       phone: user.phone,
       created_at: user.created_at,
-      // Datos adicionales si existen en la tabla usuarios
+      // Datos adicionales si existen en la tabla perfiles_usuario
       ...(usuarioData && {
-        usuario_id: usuarioData.id, // ID integer de la tabla usuarios
         username: usuarioData.username,
         cedula: usuarioData.cedula,
         telefono: usuarioData.telefono,
@@ -71,7 +70,7 @@ export async function verificarToken(req, res, next) {
     };
 
     console.log(
-      `✅ Usuario autenticado: ${req.user.email} (auth_id: ${req.user.id})`
+      `✅ Usuario autenticado: ${req.user.email} (auth_id: ${req.user.id})`,
     );
 
     next();
@@ -104,7 +103,7 @@ export const verificarPermisos = (permisosRequeridos) => {
 
     // Verificar si tiene alguno de los permisos requeridos
     const tienePermiso = permisosRequeridos.some((permiso) =>
-      userPermisos.includes(permiso)
+      userPermisos.includes(permiso),
     );
 
     if (!tienePermiso) {
@@ -165,7 +164,7 @@ export async function autenticacionOpcional(req, res, next) {
 
       if (!error && user) {
         const { data: usuarioData } = await supabase
-          .from('usuarios')
+          .from('perfiles_usuario')
           .select('*, rol:roles(id, nombre)')
           .eq('auth_id', user.id)
           .single();
