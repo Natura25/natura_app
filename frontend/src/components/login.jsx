@@ -9,8 +9,8 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const API_URL = 'https://natura-app.onrender.com/api';
-  const API_URL_LOCAL = 'http://localhost:3000/api';
+  // const API_URL = 'https://natura-app.onrender.com/api';
+  const API_URL = 'http://localhost:3000/api';
 
   const handleSubmit = async (e) => {
     e.preventDefault();

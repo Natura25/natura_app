@@ -1,8 +1,8 @@
 // src/pages/Empleados.jsx
 import React, { useState, useEffect } from 'react';
-import './Nomina.css';
+import './inventario.css'; // Reutiliza los estilos
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+const API_URL = /*import.meta.env.VITE_API_URL ||*/ 'http://localhost:3000/api';
 
 export default function Empleados() {
   const [empleados, setEmpleados] = useState([]);
@@ -12,6 +12,7 @@ export default function Empleados() {
   const [departamentos, setDepartamentos] = useState([]);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [empleadoEditar, setEmpleadoEditar] = useState(null);
+  const [vistaActual, setVistaActual] = useState('tabla');
 
   useEffect(() => {
     cargarEmpleados();
@@ -25,9 +26,9 @@ export default function Empleados() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      setEmpleados(data);
+      setEmpleados(data.data || data);
     } catch (error) {
-      console.error('Error cargando empleados:', error);
+      console.error('Error:', error);
     } finally {
       setLoading(false);
     }
@@ -40,9 +41,9 @@ export default function Empleados() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      setDepartamentos(data);
+      setDepartamentos(data.data || data);
     } catch (error) {
-      console.error('Error cargando departamentos:', error);
+      console.error('Error:', error);
     }
   };
 
@@ -56,11 +57,6 @@ export default function Empleados() {
     return matchBusqueda && matchDepartamento;
   });
 
-  const abrirModal = (empleado = null) => {
-    setEmpleadoEditar(empleado);
-    setModalAbierto(true);
-  };
-
   const eliminarEmpleado = async (id) => {
     if (!window.confirm('¿Eliminar este empleado?')) return;
     try {
@@ -71,7 +67,7 @@ export default function Empleados() {
       });
       cargarEmpleados();
     } catch (error) {
-      console.error('Error eliminando:', error);
+      console.error('Error:', error);
     }
   };
 
@@ -93,9 +89,15 @@ export default function Empleados() {
         <div className="header-top">
           <div className="header-title">
             <h1>👥 Empleados</h1>
-            <p>Gestiona el personal de la empresa</p>
+            <p>Gestión del personal de la empresa</p>
           </div>
-          <button className="btn-nuevo" onClick={() => abrirModal()}>
+          <button
+            className="btn-nuevo"
+            onClick={() => {
+              setEmpleadoEditar(null);
+              setModalAbierto(true);
+            }}
+          >
             ➕ Nuevo Empleado
           </button>
         </div>
@@ -125,91 +127,156 @@ export default function Empleados() {
               </option>
             ))}
           </select>
+          <div className="view-buttons">
+            <button
+              className={`btn-view ${vistaActual === 'tabla' ? 'active' : ''}`}
+              onClick={() => setVistaActual('tabla')}
+            >
+              📋
+            </button>
+            <button
+              className={`btn-view ${vistaActual === 'tarjetas' ? 'active' : ''}`}
+              onClick={() => setVistaActual('tarjetas')}
+            >
+              🎴
+            </button>
+          </div>
         </div>
         <div className="filtros-info">
           Mostrando {empleadosFiltrados.length} de {empleados.length} empleados
         </div>
       </div>
 
-      {/* Tabla */}
-      <div className="tabla-card">
-        <div className="tabla-wrapper">
-          {empleadosFiltrados.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">📋</div>
-              <p className="empty-text">No hay empleados registrados</p>
-            </div>
-          ) : (
-            <table className="productos-table">
-              <thead>
-                <tr>
-                  <th>Código</th>
-                  <th>Nombre</th>
-                  <th>Cédula</th>
-                  <th>Puesto</th>
-                  <th>Departamento</th>
-                  <th>Estado</th>
-                  <th className="text-center">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {empleadosFiltrados.map((emp) => (
-                  <tr key={emp.id}>
-                    <td className="codigo-cell">{emp.codigo}</td>
-                    <td className="nombre-cell">{emp.nombre_completo}</td>
-                    <td>{emp.cedula}</td>
-                    <td>{emp.puesto}</td>
-                    <td>
-                      <span className="badge-categoria">
-                        {emp.departamento?.nombre || 'Sin departamento'}
-                      </span>
-                    </td>
-                    <td>
-                      <span
-                        className={`stock-badge ${emp.estado === 'activo' ? 'normal' : 'bajo'}`}
-                      >
-                        {emp.estado}
-                      </span>
-                    </td>
-                    <td className="acciones-cell">
-                      <button
-                        className="btn-editar"
-                        onClick={() => abrirModal(emp)}
-                      >
-                        ✏️ Editar
-                      </button>
-                      <button
-                        className="btn-eliminar"
-                        onClick={() => eliminarEmpleado(emp.id)}
-                      >
-                        🗑️ Eliminar
-                      </button>
-                    </td>
+      {/* Vista Tabla */}
+      {vistaActual === 'tabla' ? (
+        <div className="tabla-card">
+          <div className="tabla-wrapper">
+            {empleadosFiltrados.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon">📋</div>
+                <p className="empty-text">No hay empleados registrados</p>
+              </div>
+            ) : (
+              <table className="productos-table">
+                <thead>
+                  <tr>
+                    <th>Código</th>
+                    <th>Nombre</th>
+                    <th>Cédula</th>
+                    <th>Puesto</th>
+                    <th>Departamento</th>
+                    <th>Estado</th>
+                    <th className="text-center">Acciones</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+                </thead>
+                <tbody>
+                  {empleadosFiltrados.map((emp) => (
+                    <tr key={emp.id}>
+                      <td className="codigo-cell">{emp.codigo}</td>
+                      <td className="nombre-cell">{emp.nombre_completo}</td>
+                      <td>{emp.cedula}</td>
+                      <td>{emp.puesto}</td>
+                      <td>
+                        <span className="badge-categoria">
+                          {emp.departamento?.nombre || 'Sin departamento'}
+                        </span>
+                      </td>
+                      <td>
+                        <span
+                          className={`stock-badge ${emp.estado === 'activo' ? 'normal' : 'bajo'}`}
+                        >
+                          {emp.estado}
+                        </span>
+                      </td>
+                      <td className="acciones-cell">
+                        <button
+                          className="btn-editar"
+                          onClick={() => {
+                            setEmpleadoEditar(emp);
+                            setModalAbierto(true);
+                          }}
+                        >
+                          ✏️ Editar
+                        </button>
+                        <button
+                          className="btn-eliminar"
+                          onClick={() => eliminarEmpleado(emp.id)}
+                        >
+                          🗑️ Eliminar
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
-      </div>
+      ) : (
+        /* Vista Tarjetas */
+        <div className="tarjetas-grid">
+          {empleadosFiltrados.map((emp) => (
+            <div key={emp.id} className="producto-card">
+              <div className="card-header">
+                <div className="card-codigo">{emp.codigo}</div>
+                <h3 className="card-nombre">{emp.nombre_completo}</h3>
+                <span className="badge-categoria">{emp.puesto}</span>
+              </div>
+              <div className="card-stats">
+                <div>
+                  <div className="stat-label">Cédula</div>
+                  <div style={{ fontSize: '14px', fontWeight: '600' }}>
+                    {emp.cedula}
+                  </div>
+                </div>
+                <div>
+                  <div className="stat-label">Estado</div>
+                  <span
+                    className={`stock-badge ${emp.estado === 'activo' ? 'normal' : 'bajo'}`}
+                  >
+                    {emp.estado}
+                  </span>
+                </div>
+              </div>
+              <div className="card-acciones">
+                <button
+                  className="btn-editar"
+                  onClick={() => {
+                    setEmpleadoEditar(emp);
+                    setModalAbierto(true);
+                  }}
+                >
+                  ✏️ Editar
+                </button>
+                <button
+                  className="btn-eliminar"
+                  onClick={() => eliminarEmpleado(emp.id)}
+                >
+                  🗑️
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Modal */}
       {modalAbierto && (
         <ModalEmpleado
           empleado={empleadoEditar}
+          departamentos={departamentos}
           onClose={() => setModalAbierto(false)}
           onGuardar={() => {
             setModalAbierto(false);
             cargarEmpleados();
           }}
-          departamentos={departamentos}
         />
       )}
     </div>
   );
 }
 
-function ModalEmpleado({ empleado, onClose, onGuardar, departamentos }) {
+function ModalEmpleado({ empleado, departamentos, onClose, onGuardar }) {
   const [formData, setFormData] = useState({
     nombres: empleado?.nombres || '',
     apellidos: empleado?.apellidos || '',
@@ -242,9 +309,9 @@ function ModalEmpleado({ empleado, onClose, onGuardar, departamentos }) {
       });
 
       if (res.ok) {
-        // Si es nuevo empleado y tiene salario, configurarlo
+        const data = await res.json();
+        // Configurar salario si es nuevo
         if (!empleado && formData.salario_base) {
-          const data = await res.json();
           await fetch(`${API_URL}/api/nomina/empleados/${data.id}/salario`, {
             method: 'POST',
             headers: {
@@ -260,7 +327,7 @@ function ModalEmpleado({ empleado, onClose, onGuardar, departamentos }) {
         onGuardar();
       }
     } catch (error) {
-      console.error('Error guardando:', error);
+      console.error('Error:', error);
       alert('Error al guardar empleado');
     }
   };

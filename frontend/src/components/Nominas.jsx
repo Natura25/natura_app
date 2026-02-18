@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import './Nomina.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+//const API_URL = 'https://natura-app.onrender.com/api';
+const API_URL = 'http://localhost:3000/api';
 
 export default function Nominas() {
   const [nominas, setNominas] = useState([]);

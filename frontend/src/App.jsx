@@ -7,8 +7,8 @@ import {
 } from 'react-router-dom';
 import Login from './components/login';
 import DashboardModern from './components/DashboardModern';
-import Inventory from './components/Inventario'; //
-import ProtectedRoute from './components/ProtectedRoute'; //
+import Inventory from './components/Inventario';
+import ProtectedRoute from './components/ProtectedRoute';
 import Ventas from './components/ventas';
 import CuentasPorCobrar from './components/cuentasPorCobrar';
 import Empleados from './components/Empleados';
@@ -18,13 +18,11 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Rutas públicas - no necesitan autenticación */}
+        {/* Públicas */}
         <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/empleados" element={<Empleados />} />
-        <Route path="/nominas" element={<Nominas />} />
 
-        {/* Rutas protegidas - necesitan autenticación */}
+        {/* Protegidas */}
         <Route
           path="/dashboard"
           element={
@@ -33,7 +31,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/inventario"
           element={
@@ -42,7 +39,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/ventas"
           element={
@@ -51,7 +47,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/cuentas-por-cobrar"
           element={
@@ -60,8 +55,23 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/empleados"
+          element={
+            <ProtectedRoute>
+              <Empleados />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/nominas"
+          element={
+            <ProtectedRoute>
+              <Nominas />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* <Route path="/auth/confirm" element={<AuthConfirm />} /> */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

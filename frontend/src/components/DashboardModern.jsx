@@ -10,7 +10,8 @@ const DashboardModern = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const navigate = useNavigate();
 
-  const API_URL = 'https://natura-app.onrender.com/api/auth';
+  const API_URL =
+    /*import.meta.env.VITE_API_URL ||*/ 'http://localhost:3000/api/auth';
 
   // Función para obtener un número aleatorio para la altura de las barras del gráfico
   const getRandomBarHeight = () =>
@@ -250,14 +251,10 @@ const DashboardModern = () => {
                 )}
               </a>
             </li>
-            <li className="nav-item">
-              <a href="/usuarios" className="nav-link">
-                <span className="nav-icon">👥</span>
-                {!sidebarCollapsed && (
-                  <span className="nav-text">Usuarios</span>
-                )}
-              </a>
-            </li>
+            <button className="nav-link" onClick={() => navigate('/nominas')}>
+              <span className="nav-icon"></span>
+              {!sidebarCollapsed && <span className="nav-text">Nomina</span>}
+            </button>
             <li className="nav-item">
               <a href="/configuracion" className="nav-link">
                 <span className="nav-icon">⚙️</span>
