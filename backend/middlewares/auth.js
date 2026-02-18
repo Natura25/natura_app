@@ -60,7 +60,7 @@ export async function verificarToken(req, res, next) {
         telefono: usuarioData.telefono,
         rol_id: usuarioData.rol_id,
         rol_nombre: usuarioData.rol?.nombre,
-        activo: usuarioData.activo,
+        activo: usuarioData.estado,
       }),
       // Permisos (puedes expandir esto según tu lógica de permisos)
       permisos:
@@ -166,7 +166,7 @@ export async function autenticacionOpcional(req, res, next) {
         const { data: usuarioData } = await supabase
           .from('perfiles_usuario')
           .select('*, rol:roles(id, nombre)')
-          .eq('auth_id', user.id)
+          .eq('user_id', user.id)
           .single();
 
         req.user = {
