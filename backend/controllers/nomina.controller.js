@@ -3,7 +3,7 @@
 import empleadoModel from '../models/empleado.model.js';
 import conceptoModel from '../models/conceptoNomina.model.js';
 import nominaModel from '../models/nomina.model.js';
-import prestamoModel from '../models/Prestamo.model.js';
+import prestamoModel from '../models/prestamo.model.js';
 import ausenciaModel from '../models/ausencia.model.js';
 
 export default {

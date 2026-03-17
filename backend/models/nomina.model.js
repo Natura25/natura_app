@@ -269,7 +269,7 @@ export default {
       await supabase
         .from('nominas')
         .update({
-          estado: 'calculada',
+          estado: 'pendiente',
           fecha_calculo: new Date().toISOString(),
           calculado_por: userId,
           actualizado_por: userId,
@@ -293,18 +293,35 @@ export default {
       const { data, error } = await supabase
         .from('nominas')
         .update({
-          estado: 'aprobada',
+          estado: 'aprobado',
           fecha_aprobacion: new Date().toISOString(),
           aprobado_por: userId,
           actualizado_por: userId,
         })
         .eq('id', nominaId)
-        .eq('estado', 'calculada')
+        .in('estado', ['borrador', 'pendiente']) // <-- USA .in() para múltiples estados
         .select()
         .single();
 
-      if (error) throw error;
-      if (!data) throw new Error('Solo se pueden aprobar nóminas calculadas');
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // Si no encuentra, verificamos por qué
+          const { data: nominaActual } = await supabase
+            .from('nominas')
+            .select('estado')
+            .eq('id', nominaId)
+            .single();
+
+          if (!nominaActual) {
+            throw new Error('Nómina no encontrada');
+          } else {
+            throw new Error(
+              `La nómina está en estado "${nominaActual.estado}" y no puede ser aprobada directamente. Debe estar en "borrador" o "pendiente"`,
+            );
+          }
+        }
+        throw error;
+      }
 
       // Actualizar detalles
       await supabase
@@ -327,13 +344,13 @@ export default {
       const { data, error } = await supabase
         .from('nominas')
         .update({
-          estado: 'pagada',
+          estado: 'pagado',
           fecha_pago: new Date().toISOString(),
           pagado_por: userId,
           actualizado_por: userId,
         })
         .eq('id', nominaId)
-        .eq('estado', 'aprobada')
+        .eq('estado', 'aprobado')
         .select()
         .single();
 
@@ -351,7 +368,7 @@ export default {
 
       return data;
     } catch (error) {
-      console.error('❌ Error marcando como pagada:', error);
+      console.error('❌ Error marcando como pagado:', error);
       throw error;
     }
   },

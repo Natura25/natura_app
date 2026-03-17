@@ -12,11 +12,9 @@ export default {
         .from('empleados')
         .select(
           `
-          *,
-          departamento:categorias!empleados_departamento_id_fkey(id, codigo, nombre),
-          supervisor:empleados!empleados_supervisor_id_fkey(id, codigo, nombre_completo),
-          user:perfiles_usuario!empleados_user_id_fkey(user_id, username, email)
-        `,
+        *,
+        departamento:categorias!empleados_departamento_id_fkey(id, codigo, nombre)
+      `,
           { count: 'exact' },
         )
         .eq('eliminado', false)
@@ -29,11 +27,17 @@ export default {
         );
       }
 
-      if (filtros.departamento_id)
+      if (filtros.departamento_id) {
         query = query.eq('departamento_id', filtros.departamento_id);
-      if (filtros.estado) query = query.eq('estado', filtros.estado);
-      if (filtros.tipo_contrato)
+      }
+
+      if (filtros.estado) {
+        query = query.eq('estado', filtros.estado);
+      }
+
+      if (filtros.tipo_contrato) {
         query = query.eq('tipo_contrato', filtros.tipo_contrato);
+      }
 
       // Paginación
       const page = parseInt(filtros.page) || 1;
@@ -41,10 +45,27 @@ export default {
       const offset = (page - 1) * limit;
       query = query.range(offset, offset + limit - 1);
 
-      const { data, error, count } = await query;
+      // ✅ EJECUTAR QUERY PRIMERO
+      const { data: empleados, error, count } = await query;
       if (error) throw error;
 
-      return { data, count };
+      // ✅ AHORA SÍ agregar supervisores
+      const empleadosConSupervisor = await Promise.all(
+        empleados.map(async (emp) => {
+          if (emp.supervisor_id) {
+            const { data: supervisor } = await supabase
+              .from('empleados')
+              .select('id, codigo, nombre_completo, puesto')
+              .eq('id', emp.supervisor_id)
+              .single();
+            return { ...emp, supervisor };
+          }
+          return { ...emp, supervisor: null };
+        }),
+      );
+
+      // ✅ RETORNAR UNA SOLA VEZ
+      return { data: empleadosConSupervisor, count };
     } catch (error) {
       console.error('❌ Error listando empleados:', error);
       throw error;
@@ -54,28 +75,34 @@ export default {
   /**
    * Obtener empleado por ID completo
    */
-  async obtenerEmpleadoPorId(id) {
-    try {
-      const { data, error } = await supabase
-        .from('empleados')
-        .select(
-          `
-          *,
-          departamento:categorias!empleados_departamento_id_fkey(id, codigo, nombre),
-          supervisor:empleados!empleados_supervisor_id_fkey(id, codigo, nombre_completo),
-          configuracion_salarial(id, salario_base, periodo_pago, fecha_inicio, fecha_fin, activo)
-        `,
-        )
-        .eq('id', id)
-        .eq('eliminado', false)
-        .single();
 
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('❌ Error obteniendo empleado:', error);
-      throw error;
+  async obtenerEmpleadoPorId(id) {
+    const { data: empleado, error } = await supabase
+      .from('empleados')
+      .select(
+        `
+        *,
+        departamento:categorias(id, nombre),
+        configuracion_salarial(*)
+      `,
+      )
+      .eq('id', id)
+      .eq('eliminado', false)
+      .single();
+
+    if (error) throw error;
+
+    // Agregar supervisor si existe
+    if (empleado.supervisor_id) {
+      const { data: supervisor } = await supabase
+        .from('empleados')
+        .select('id, codigo, nombre_completo, puesto')
+        .eq('id', empleado.supervisor_id)
+        .single();
+      empleado.supervisor = supervisor;
     }
+
+    return empleado;
   },
 
   /**
@@ -83,13 +110,59 @@ export default {
    */
   async crearEmpleado(datos, userId) {
     try {
-      // Generar código automático
+      // Generar código automático si no viene
       if (!datos.codigo) {
-        const { count } = await supabase
+        // Obtener el último código usado (solo no eliminados)
+        const { data: ultimoEmpleado } = await supabase
           .from('empleados')
-          .select('*', { count: 'exact', head: true })
-          .eq('eliminado', false);
-        datos.codigo = `EMP-${String(count + 1).padStart(4, '0')}`;
+          .select('codigo')
+          .eq('eliminado', false)
+          .like('codigo', 'EMP-%')
+          .order('codigo', { ascending: false })
+          .limit(1);
+
+        let siguienteNumero = 1;
+
+        if (ultimoEmpleado && ultimoEmpleado.length > 0) {
+          // Extraer el número del último código (ej: "EMP-0006" -> 6)
+          const ultimoCodigo = ultimoEmpleado[0].codigo;
+          const match = ultimoCodigo.match(/EMP-(\d+)/);
+          if (match) {
+            siguienteNumero = parseInt(match[1], 10) + 1;
+          }
+        }
+
+        datos.codigo = `EMP-${String(siguienteNumero).padStart(4, '0')}`;
+
+        // Verificar que el código generado no exista (doble seguridad)
+        let codigoExiste = true;
+        let intentos = 0;
+        const maxIntentos = 10;
+
+        while (codigoExiste && intentos < maxIntentos) {
+          const { data: existe } = await supabase
+            .from('empleados')
+            .select('id')
+            .eq('codigo', datos.codigo)
+            .maybeSingle();
+
+          if (existe) {
+            // Si existe, incrementar y probar el siguiente
+            siguienteNumero++;
+            datos.codigo = `EMP-${String(siguienteNumero).padStart(4, '0')}`;
+            intentos++;
+          } else {
+            codigoExiste = false;
+          }
+        }
+
+        if (codigoExiste) {
+          throw new Error(
+            'No se pudo generar un código único después de múltiples intentos',
+          );
+        }
+
+        console.log('📋 Código generado:', datos.codigo);
       }
 
       const { data, error } = await supabase
@@ -105,7 +178,18 @@ export default {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        // Si aún así hay error de duplicado, hacer reintento automático
+        if (error.code === '23505' && error.message.includes('codigo')) {
+          console.log(
+            '⚠️ Conflicto de código, reintentando con nuevo código...',
+          );
+          delete datos.codigo; // Eliminar el código conflictivo
+          return this.crearEmpleado(datos, userId); // Reintentar
+        }
+        throw error;
+      }
+
       return data;
     } catch (error) {
       console.error('❌ Error creando empleado:', error);
