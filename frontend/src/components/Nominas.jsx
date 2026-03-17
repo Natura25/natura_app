@@ -1,8 +1,7 @@
 // src/pages/Nominas.jsx
 import React, { useState, useEffect } from 'react';
-import './Nomina.css';
+import './Inventario.css';
 
-//const API_URL = 'https://natura-app.onrender.com/api';
 const API_URL = 'http://localhost:3000/api';
 
 export default function Nominas() {
@@ -18,20 +17,20 @@ export default function Nominas() {
   const cargarNominas = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/nomina/nominas`, {
+      const res = await fetch(`${API_URL}/nomina/nominas`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      if (!res.ok) throw new Error('Error cargando nóminas');
+
       const data = await res.json();
-      setNominas(data);
+      setNominas(data.data || data); // Maneja ambos formatos
     } catch (error) {
       console.error('Error:', error);
+      alert('Error al cargar nóminas');
     } finally {
       setLoading(false);
     }
-  };
-
-  const verDetalle = (nomina) => {
-    setNominaSeleccionada(nomina);
   };
 
   if (loading) {
@@ -61,7 +60,7 @@ export default function Nominas() {
 
       <div className="tabla-card">
         <div className="tabla-wrapper">
-          {nominas.length === 0 ? (
+          {!nominas || nominas.length === 0 ? (
             <div className="empty-state">
               <div className="empty-icon">💸</div>
               <p className="empty-text">No hay nóminas registradas</p>
@@ -84,8 +83,8 @@ export default function Nominas() {
                   <tr key={nom.id}>
                     <td className="codigo-cell">{nom.codigo}</td>
                     <td>
-                      {new Date(nom.periodo_inicio).toLocaleDateString()} -
-                      {new Date(nom.periodo_fin).toLocaleDateString()}
+                      {new Date(nom.periodo_inicio).toLocaleDateString('es-DO')}{' '}
+                      - {new Date(nom.periodo_fin).toLocaleDateString('es-DO')}
                     </td>
                     <td>
                       <span className="badge-categoria">
@@ -99,9 +98,9 @@ export default function Nominas() {
                     <td>
                       <span
                         className={`stock-badge ${
-                          nom.estado === 'pagada'
+                          nom.estado === 'pagado'
                             ? 'normal'
-                            : nom.estado === 'aprobada'
+                            : nom.estado === 'aprobado'
                               ? 'normal'
                               : 'bajo'
                         }`}
@@ -112,7 +111,7 @@ export default function Nominas() {
                     <td className="acciones-cell">
                       <button
                         className="btn-editar"
-                        onClick={() => verDetalle(nom)}
+                        onClick={() => setNominaSeleccionada(nom)}
                       >
                         👁️ Ver
                       </button>
@@ -139,6 +138,7 @@ export default function Nominas() {
         <ModalDetalle
           nomina={nominaSeleccionada}
           onClose={() => setNominaSeleccionada(null)}
+          onRefresh={cargarNominas}
         />
       )}
     </div>
@@ -146,7 +146,7 @@ export default function Nominas() {
 }
 
 function ModalNuevaNomina({ onClose, onGuardar }) {
-  const [paso, setPaso] = useState(1); // 1: Config, 2: Seleccionar empleados, 3: Calcular
+  const [paso, setPaso] = useState(1);
   const [formData, setFormData] = useState({
     periodo_inicio: '',
     periodo_fin: '',
@@ -156,6 +156,7 @@ function ModalNuevaNomina({ onClose, onGuardar }) {
   const [empleados, setEmpleados] = useState([]);
   const [empleadosSeleccionados, setEmpleadosSeleccionados] = useState([]);
   const [calculando, setCalculando] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (paso === 2) cargarEmpleados();
@@ -164,23 +165,30 @@ function ModalNuevaNomina({ onClose, onGuardar }) {
   const cargarEmpleados = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/nomina/empleados/para-nomina`, {
+      const res = await fetch(`${API_URL}/nomina/empleados/para-nomina`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      if (!res.ok) throw new Error('Error cargando empleados');
+
       const data = await res.json();
-      setEmpleados(data);
+      setEmpleados(data.data || data);
     } catch (error) {
       console.error('Error:', error);
+      setError('Error al cargar empleados');
     }
   };
 
   const crearYCalcular = async () => {
     setCalculando(true);
+    setError('');
+
     try {
       const token = localStorage.getItem('token');
 
       // 1. Crear nómina
-      const resNomina = await fetch(`${API_URL}/api/nomina/nominas`, {
+      console.log('📝 Creando nómina...');
+      const resNomina = await fetch(`${API_URL}/nomina/nominas`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -188,18 +196,25 @@ function ModalNuevaNomina({ onClose, onGuardar }) {
         },
         body: JSON.stringify(formData),
       });
-      const nomina = await resNomina.json();
 
-      // 2. Calcular
+      if (!resNomina.ok) {
+        const errorData = await resNomina.json();
+        throw new Error(errorData.error || 'Error creando nómina');
+      }
+
+      const nomina = await resNomina.json();
+      console.log('✅ Nómina creada:', nomina.codigo);
+
+      // 2. Preparar datos para calcular
       const empleadosData = empleadosSeleccionados.map((emp) => ({
         empleado_id: emp.id,
         codigo: emp.codigo,
         nombre_completo: emp.nombre_completo,
         cedula: emp.cedula,
         puesto: emp.puesto,
-        salario_base: emp.configuracion_salarial[0]?.salario_base || 0,
+        salario_base: emp.configuracion_salarial?.[0]?.salario_base || 0,
         periodo_pago:
-          emp.configuracion_salarial[0]?.periodo_pago || 'quincenal',
+          emp.configuracion_salarial?.[0]?.periodo_pago || 'quincenal',
         dias_trabajados: 15,
         dias_ausencias: 0,
         horas_extras: 0,
@@ -207,20 +222,31 @@ function ModalNuevaNomina({ onClose, onGuardar }) {
         conceptos_adicionales: [],
       }));
 
-      await fetch(`${API_URL}/api/nomina/nominas/${nomina.id}/calcular`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+      console.log('🧮 Calculando nómina...');
+      const resCalculo = await fetch(
+        `${API_URL}/nomina/nominas/${nomina.id}/calcular`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ empleados: empleadosData }),
         },
-        body: JSON.stringify({ empleados: empleadosData }),
-      });
+      );
 
-      alert('✅ Nómina creada y calculada exitosamente');
+      if (!resCalculo.ok) {
+        const errorData = await resCalculo.json();
+        throw new Error(errorData.error || 'Error calculando nómina');
+      }
+
+      console.log('✅ Nómina calculada exitosamente');
+      alert('✅ Nómina creada y calculada correctamente');
       onGuardar();
     } catch (error) {
-      console.error('Error:', error);
-      alert('Error al crear nómina');
+      console.error('❌ Error:', error);
+      setError(error.message);
+      alert(`Error: ${error.message}`);
     } finally {
       setCalculando(false);
     }
@@ -238,6 +264,21 @@ function ModalNuevaNomina({ onClose, onGuardar }) {
           {paso === 2 && '👥 Seleccionar Empleados'}
           {paso === 3 && '🧮 Confirmar y Calcular'}
         </h2>
+
+        {error && (
+          <div
+            style={{
+              padding: '12px',
+              backgroundColor: '#ffebee',
+              border: '1px solid #f44336',
+              borderRadius: '8px',
+              marginBottom: '16px',
+              color: '#c62828',
+            }}
+          >
+            {error}
+          </div>
+        )}
 
         {paso === 1 && (
           <form
@@ -325,56 +366,74 @@ function ModalNuevaNomina({ onClose, onGuardar }) {
                 marginBottom: '20px',
               }}
             >
-              {empleados.map((emp) => (
-                <label
-                  key={emp.id}
+              {empleados.length === 0 ? (
+                <p
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '12px',
-                    border: '1px solid #e0e0e0',
-                    borderRadius: '8px',
-                    marginBottom: '8px',
-                    cursor: 'pointer',
-                    backgroundColor: empleadosSeleccionados.includes(emp)
-                      ? '#e8f5e9'
-                      : 'white',
+                    textAlign: 'center',
+                    color: '#999',
+                    padding: '40px',
                   }}
                 >
-                  <input
-                    type="checkbox"
-                    checked={empleadosSeleccionados.includes(emp)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setEmpleadosSeleccionados([
-                          ...empleadosSeleccionados,
-                          emp,
-                        ]);
-                      } else {
-                        setEmpleadosSeleccionados(
-                          empleadosSeleccionados.filter((e) => e.id !== emp.id),
-                        );
-                      }
-                    }}
+                  No hay empleados con salario configurado
+                </p>
+              ) : (
+                empleados.map((emp) => (
+                  <label
+                    key={emp.id}
                     style={{
-                      marginRight: '12px',
-                      width: '18px',
-                      height: '18px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '12px',
+                      border: '1px solid #e0e0e0',
+                      borderRadius: '8px',
+                      marginBottom: '8px',
+                      cursor: 'pointer',
+                      backgroundColor: empleadosSeleccionados.some(
+                        (e) => e.id === emp.id,
+                      )
+                        ? '#e8f5e9'
+                        : 'white',
                     }}
-                  />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: '600' }}>
-                      {emp.nombre_completo}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={empleadosSeleccionados.some(
+                        (e) => e.id === emp.id,
+                      )}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setEmpleadosSeleccionados([
+                            ...empleadosSeleccionados,
+                            emp,
+                          ]);
+                        } else {
+                          setEmpleadosSeleccionados(
+                            empleadosSeleccionados.filter(
+                              (e) => e.id !== emp.id,
+                            ),
+                          );
+                        }
+                      }}
+                      style={{
+                        marginRight: '12px',
+                        width: '18px',
+                        height: '18px',
+                      }}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: '600' }}>
+                        {emp.nombre_completo}
+                      </div>
+                      <div style={{ fontSize: '13px', color: '#666' }}>
+                        {emp.puesto} - RD${' '}
+                        {(
+                          emp.configuracion_salarial?.[0]?.salario_base || 0
+                        ).toLocaleString('es-DO')}
+                      </div>
                     </div>
-                    <div style={{ fontSize: '13px', color: '#666' }}>
-                      {emp.puesto} - RD${' '}
-                      {(
-                        emp.configuracion_salarial[0]?.salario_base || 0
-                      ).toLocaleString()}
-                    </div>
-                  </div>
-                </label>
-              ))}
+                  </label>
+                ))
+              )}
             </div>
             <div className="modal-actions">
               <button className="btn-cancelar" onClick={() => setPaso(1)}>
@@ -432,9 +491,10 @@ function ModalNuevaNomina({ onClose, onGuardar }) {
   );
 }
 
-function ModalDetalle({ nomina, onClose }) {
+function ModalDetalle({ nomina, onClose, onRefresh }) {
   const [detalle, setDetalle] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [procesando, setProcesando] = useState(false);
 
   useEffect(() => {
     cargarDetalle();
@@ -444,17 +504,76 @@ function ModalDetalle({ nomina, onClose }) {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(
-        `${API_URL}/api/nomina/nominas/${nomina.id}/detalle`,
+        `${API_URL}/nomina/nominas/${nomina.id}/detalle`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
       );
+
+      if (!res.ok) throw new Error('Error cargando detalle');
+
       const data = await res.json();
-      setDetalle(data);
+      setDetalle(data.data || data);
     } catch (error) {
       console.error('Error:', error);
+      alert('Error al cargar detalle');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const aprobar = async () => {
+    if (!window.confirm('¿Aprobar esta nómina?')) return;
+
+    setProcesando(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(
+        `${API_URL}/nomina/nominas/${nomina.id}/aprobar`,
+        {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Error aprobando');
+      }
+
+      alert('✅ Nómina aprobada');
+      onRefresh();
+      onClose();
+    } catch (error) {
+      alert(`Error: ${error.message}`);
+    } finally {
+      setProcesando(false);
+    }
+  };
+
+  const pagar = async () => {
+    if (!window.confirm('¿Marcar esta nómina como pagada?')) return;
+
+    setProcesando(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_URL}/nomina/nominas/${nomina.id}/pagar`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Error marcando como pagada');
+      }
+
+      alert('✅ Nómina marcada como pagada');
+      onRefresh();
+      onClose();
+    } catch (error) {
+      alert(`Error: ${error.message}`);
+    } finally {
+      setProcesando(false);
     }
   };
 
@@ -469,54 +588,113 @@ function ModalDetalle({ nomina, onClose }) {
 
         {loading ? (
           <div style={{ textAlign: 'center', padding: '40px' }}>
-            Cargando...
+            <div
+              className="loading-spinner"
+              style={{ margin: '0 auto 20px' }}
+            ></div>
+            Cargando detalle...
           </div>
         ) : (
           <div>
-            <table className="productos-table">
-              <thead>
-                <tr>
-                  <th>Empleado</th>
-                  <th className="text-right">Salario Base</th>
-                  <th className="text-right">Percepciones</th>
-                  <th className="text-right">Deducciones</th>
-                  <th className="text-right">Neto</th>
-                </tr>
-              </thead>
-              <tbody>
-                {detalle.map((det) => (
-                  <tr key={det.id}>
-                    <td className="nombre-cell">{det.empleado_nombre}</td>
-                    <td className="precio-cell">
-                      RD$ {det.salario_base.toLocaleString('es-DO')}
-                    </td>
-                    <td className="precio-cell" style={{ color: '#4caf50' }}>
-                      RD$ {det.total_percepciones.toLocaleString('es-DO')}
-                    </td>
-                    <td className="precio-cell" style={{ color: '#f44336' }}>
-                      RD$ {det.total_deducciones.toLocaleString('es-DO')}
-                    </td>
-                    <td className="precio-venta">
-                      RD$ {det.salario_neto.toLocaleString('es-DO')}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {detalle.length === 0 ? (
+              <p
+                style={{ textAlign: 'center', padding: '40px', color: '#999' }}
+              >
+                No hay detalle calculado para esta nómina
+              </p>
+            ) : (
+              <>
+                <table className="productos-table">
+                  <thead>
+                    <tr>
+                      <th>Empleado</th>
+                      <th className="text-right">Salario Base</th>
+                      <th className="text-right">Percepciones</th>
+                      <th className="text-right">Deducciones</th>
+                      <th className="text-right">Neto</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {detalle.map((det) => (
+                      <tr key={det.id}>
+                        <td className="nombre-cell">{det.empleado_nombre}</td>
+                        <td className="precio-cell">
+                          RD$ {Number(det.salario_base).toLocaleString('es-DO')}
+                        </td>
+                        <td
+                          className="precio-cell"
+                          style={{ color: '#4caf50' }}
+                        >
+                          RD${' '}
+                          {Number(det.total_percepciones).toLocaleString(
+                            'es-DO',
+                          )}
+                        </td>
+                        <td
+                          className="precio-cell"
+                          style={{ color: '#f44336' }}
+                        >
+                          RD${' '}
+                          {Number(det.total_deducciones).toLocaleString(
+                            'es-DO',
+                          )}
+                        </td>
+                        <td className="precio-venta">
+                          RD$ {Number(det.salario_neto).toLocaleString('es-DO')}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
 
-            <div className="margen-info" style={{ marginTop: '20px' }}>
-              <div>
-                <div className="margen-label">Total Neto</div>
-                <div className="margen-valor">
-                  RD$ {(nomina.total_neto || 0).toLocaleString('es-DO')}
+                <div className="margen-info" style={{ marginTop: '20px' }}>
+                  <div>
+                    <div className="margen-label">Total Neto</div>
+                    <div className="margen-valor">
+                      RD${' '}
+                      {Number(nomina.total_neto || 0).toLocaleString('es-DO')}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="margen-label">Estado</div>
+                    <span
+                      className={`stock-badge ${
+                        nomina.estado === 'pagado'
+                          ? 'normal'
+                          : nomina.estado === 'aprobado'
+                            ? 'normal'
+                            : 'bajo'
+                      }`}
+                    >
+                      {nomina.estado}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </>
+            )}
 
             <div className="modal-actions">
               <button className="btn-cancelar" onClick={onClose}>
                 Cerrar
               </button>
+              {nomina.estado === 'pendiente' && (
+                <button
+                  className="btn-guardar"
+                  onClick={aprobar}
+                  disabled={procesando}
+                >
+                  {procesando ? '⏳ Procesando...' : '✅ Aprobar'}
+                </button>
+              )}
+              {nomina.estado === 'aprobado' && (
+                <button
+                  className="btn-guardar"
+                  onClick={pagar}
+                  disabled={procesando}
+                >
+                  {procesando ? '⏳ Procesando...' : '💰 Marcar Pagada'}
+                </button>
+              )}
             </div>
           </div>
         )}

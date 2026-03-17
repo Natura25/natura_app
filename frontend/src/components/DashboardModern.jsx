@@ -243,14 +243,10 @@ const DashboardModern = () => {
                 )}
               </a>
             </li>
-            <li className="nav-item">
-              <a href="/conciliacion" className="nav-link">
-                <span className="nav-icon">⚖️</span>
-                {!sidebarCollapsed && (
-                  <span className="nav-text">Conciliación</span>
-                )}
-              </a>
-            </li>
+            <button className="nav-link" onClick={() => navigate('/empleados')}>
+              <span className="nav-icon"></span>
+              {!sidebarCollapsed && <span className="nav-text">Empleados</span>}
+            </button>
             <button className="nav-link" onClick={() => navigate('/nominas')}>
               <span className="nav-icon"></span>
               {!sidebarCollapsed && <span className="nav-text">Nomina</span>}
